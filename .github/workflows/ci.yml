@@ -1,0 +1,18 @@
+name: StudyNotes CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configuration management placeholder
+        run: echo "StudyNotes CI workflow will be configured as development progresses."
