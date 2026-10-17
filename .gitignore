@@ -1,0 +1,27 @@
+# Qt Creator and CMake build files
+build/
+build-*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Qt Creator settings
+*.user
+*.user.*
+*.autosave
+
+# Compiled files
+*.exe
+*.o
+*.obj
+*.dll
+*.a
+
+# Temporary files
+*.tmp
+*.log
+
+# Environment files
+.env
+.env.*
