@@ -24,6 +24,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         registerpage.h registerpage.cpp registerpage.ui
+        profilepage.h profilepage.cpp profilepage.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET StudyNotesUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
