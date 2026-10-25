@@ -3,26 +3,30 @@
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>800</width>
-    <height>600</height>
-   </rect>
+   <rect><x>0</x><y>0</y><width>760</width><height>520</height></rect>
   </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
+  <property name="windowTitle"><string>StudyNotes - Home</string></property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow { background-color: #f5f7fb; }
+QLabel#titleLabel { color: #24324a; font-size: 30px; font-weight: 700; }
+QLabel#subtitleLabel { color: #607086; font-size: 15px; }
+QPushButton#profileButton { background-color: #4169a8; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 600; }
+QPushButton#profileButton:hover { background-color: #31568e; }
+QPushButton#profileButton:pressed { background-color: #264470; }</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>21</height>
-    </rect>
-   </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin"><number>40</number></property>
+    <property name="topMargin"><number>40</number></property>
+    <property name="rightMargin"><number>40</number></property>
+    <property name="bottomMargin"><number>40</number></property>
+    <item><spacer name="topSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>100</height></size></property></spacer></item>
+    <item><widget class="QLabel" name="titleLabel"><property name="text"><string>Welcome to StudyNotes</string></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+    <item><widget class="QLabel" name="subtitleLabel"><property name="text"><string>Keep your class notes organized and easy to find.</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+    <item><spacer name="middleSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>24</height></size></property></spacer></item>
+    <item><layout class="QHBoxLayout" name="buttonLayout"><item><spacer name="leftSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item><item><widget class="QPushButton" name="profileButton"><property name="minimumSize"><size><width>170</width><height>46</height></size></property><property name="text"><string>My Profile</string></property></widget></item><item><spacer name="rightSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item></layout></item>
+    <item><spacer name="bottomSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>130</height></size></property></spacer></item>
+   </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

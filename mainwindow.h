@@ -17,7 +17,11 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
+signals:
+    void profileRequested();
+
 private:
     Ui::MainWindow *ui;
 };
+
 #endif // MAINWINDOW_H
