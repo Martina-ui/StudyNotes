@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RegisterPage</class>
+ <widget class="QWidget" name="RegisterPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>620</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>StudyNotes - Create Account</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#RegisterPage {
+    background-color: #f4f7fb;
+}
+
+QLabel {
+    color: #243247;
+}
+
+QLineEdit {
+    color: #222222;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 10px;
+    font-size: 13px;
+    min-height: 20px;
+}
+
+QLineEdit:focus {
+    border: 2px solid #4263eb;
+}
+
+QLineEdit::placeholder {
+    color: #94a3b8;
+}
+
+QPushButton#registerButton {
+    background-color: #4263eb;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+QPushButton#registerButton:hover {
+    background-color: #364fc7;
+}
+
+QPushButton#loginButton {
+    background-color: transparent;
+    color: #4263eb;
+    border: none;
+    padding: 9px;
+    font-size: 12px;
+}
+
+QPushButton#loginButton:hover {
+    text-decoration: underline;
+}
+</string>
+  </property>
+  <layout class="QVBoxLayout" name="pageLayout">
+   <property name="leftMargin">
+    <number>48</number>
+   </property>
+   <property name="topMargin">
+    <number>38</number>
+   </property>
+   <property name="rightMargin">
+    <number>48</number>
+   </property>
+   <property name="bottomMargin">
+    <number>38</number>
+   </property>
+   <item>
+    <spacer name="topSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>18</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="font">
+      <font>
+       <pointsize>25</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>StudyNotes</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="subtitleLabel">
+     <property name="styleSheet">
+      <string notr="true">color: #64748b; font-size: 12px;</string>
+     </property>
+     <property name="text">
+      <string>Create your account to organize and share notes</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="headerSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>25</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="usernameLabel">
+     <property name="text">
+      <string>Username</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="usernameInput">
+     <property name="styleSheet">
+      <string notr="true">QLineEdit {
+    color: #222222;
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+QLineEdit:focus {
+    border: 2px solid #4A90E2;
+}</string>
+     </property>
+     <property name="maxLength">
+      <number>50</number>
+     </property>
+     <property name="placeholderText">
+      <string>Enter your username</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="gap1">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>8</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="passwordLabel">
+     <property name="text">
+      <string>Password</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="passwordInput">
+     <property name="echoMode">
+      <enum>QLineEdit::EchoMode::Password</enum>
+     </property>
+     <property name="placeholderText">
+      <string>Enter your password</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="gap2">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>8</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="confirmPasswordLabel">
+     <property name="text">
+      <string>Confirm Password</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="confirmPasswordInput">
+     <property name="echoMode">
+      <enum>QLineEdit::EchoMode::Password</enum>
+     </property>
+     <property name="placeholderText">
+      <string>Confirm your password</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="messageLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="buttonGap">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>14</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QPushButton" name="registerButton">
+     <property name="text">
+      <string>Create Account</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="loginButton">
+     <property name="text">
+      <string>Already have an account? Log In</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottomSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>18</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+  <zorder>titleLabel</zorder>
+  <zorder>subtitleLabel</zorder>
+  <zorder>usernameLabel</zorder>
+  <zorder>passwordLabel</zorder>
+  <zorder>confirmPasswordLabel</zorder>
+  <zorder>messageLabel</zorder>
+  <zorder>registerButton</zorder>
+  <zorder>loginButton</zorder>
+  <zorder>usernameInput</zorder>
+  <zorder>passwordInput</zorder>
+  <zorder>confirmPasswordInput</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

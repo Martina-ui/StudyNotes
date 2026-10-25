@@ -13,12 +13,25 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql)
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        noteservice.cpp
-        noteservice.h
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+
+    registerpage.cpp
+    registerpage.h
+    registerpage.ui
+
+    loginpage.cpp
+    loginpage.h
+    loginpage.ui
+
+    profilepage.cpp
+    profilepage.h
+    profilepage.ui
+
+    noteservice.cpp
+    noteservice.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

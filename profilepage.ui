@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ProfilePage</class>
+ <widget class="QWidget" name="ProfilePage">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>520</width><height>510</height></rect>
+  </property>
+  <property name="windowTitle"><string>StudyNotes - My Profile</string></property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin"><number>48</number></property>
+   <property name="topMargin"><number>38</number></property>
+   <property name="rightMargin"><number>48</number></property>
+   <property name="bottomMargin"><number>38</number></property>
+   <property name="spacing"><number>12</number></property>
+   <item><widget class="QLabel" name="headingLabel">
+    <property name="text"><string>My Profile</string></property>
+    <property name="alignment"><set>Qt::AlignCenter</set></property>
+   </widget></item>
+   <item><widget class="QLabel" name="subtitleLabel">
+    <property name="text"><string>Your StudyNotes account information</string></property>
+    <property name="alignment"><set>Qt::AlignCenter</set></property>
+   </widget></item>
+   <item><spacer name="topSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>22</height></size></property></spacer></item>
+   <item><widget class="QLabel" name="fieldTitleLabel"><property name="text"><string>Username</string></property></widget></item>
+   <item><widget class="QLabel" name="usernameValueLabel"><property name="text"><string>Not signed in</string></property><property name="minimumSize"><size><width>0</width><height>44</height></size></property></widget></item>
+   <item><widget class="QLabel" name="roleTitleLabel"><property name="text"><string>Account Role</string></property></widget></item>
+   <item><widget class="QLabel" name="roleValueLabel"><property name="text"><string>—</string></property><property name="minimumSize"><size><width>0</width><height>44</height></size></property></widget></item>
+   <item><widget class="QLabel" name="messageLabel"><property name="text"><string>Sign in to view your profile.</string></property><property name="wordWrap"><bool>true</bool></property><property name="alignment"><set>Qt::AlignCenter</set></property></widget></item>
+   <item><spacer name="bottomSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>22</height></size></property></spacer></item>
+   <item><widget class="QPushButton" name="backButton"><property name="text"><string>Back to Home</string></property><property name="minimumSize"><size><width>0</width><height>44</height></size></property></widget></item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
