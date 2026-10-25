@@ -1,4 +1,5 @@
 #include "noteentrypage.h"
+#include "mynotespage.h"
 #include "loginpage.h"
 #include "registerpage.h"
 #include "profilepage.h"
@@ -14,7 +15,10 @@ int main(int argc, char *argv[])
     RegisterPage registerPage;
     ProfilePage profilePage;
     NoteEntryPage noteEntryPage;
+    MyNotesPage myNotesPage;
     MainWindow mainWindow;
+
+    bool noteOpenedFromMyNotes = false;
 
     QObject::connect(&loginPage, &LoginPage::registrationRequested,
                      &registerPage, [&]() {
@@ -40,18 +44,43 @@ int main(int argc, char *argv[])
                          mainWindow.show();
                      });
 
+    QObject::connect(&mainWindow, &MainWindow::myNotesRequested,
+                     &myNotesPage, [&]() {
+                         mainWindow.hide();
+                         myNotesPage.show();
+                     });
+
+    QObject::connect(&myNotesPage, &MyNotesPage::backRequested,
+                     &mainWindow, [&]() {
+                         myNotesPage.hide();
+                         mainWindow.show();
+                     });
+
     QObject::connect(&mainWindow, &MainWindow::createNoteRequested,
                      &noteEntryPage, [&]() {
+                         noteOpenedFromMyNotes = false;
                          mainWindow.hide();
+                         noteEntryPage.show();
+                     });
+
+    QObject::connect(&myNotesPage, &MyNotesPage::createNoteRequested,
+                     &noteEntryPage, [&]() {
+                         noteOpenedFromMyNotes = true;
+                         myNotesPage.hide();
                          noteEntryPage.show();
                      });
 
     QObject::connect(&noteEntryPage, &NoteEntryPage::cancelRequested,
                      &mainWindow, [&]() {
                          noteEntryPage.hide();
-                         mainWindow.show();
+                         if (noteOpenedFromMyNotes) {
+                             myNotesPage.show();
+                         } else {
+                             mainWindow.show();
+                         }
                      });
 
     loginPage.show();
+    //mainWindow.show();
     return app.exec();
 }
