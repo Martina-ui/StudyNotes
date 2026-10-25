@@ -4,12 +4,24 @@
 #include "registerpage.h"
 #include "profilepage.h"
 #include "mainwindow.h"
+#include "databasemanager.h"
 
 #include <QApplication>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    QString databaseError;
+
+    if (!DatabaseManager::openConnection(&databaseError)) {
+        qWarning().noquote()
+            << "StudyNotes database connection failed:"
+            << databaseError;
+    } else {
+        qInfo() << "StudyNotes database connected successfully!";
+    }
 
     LoginPage loginPage;
     RegisterPage registerPage;
@@ -81,6 +93,5 @@ int main(int argc, char *argv[])
                      });
 
     loginPage.show();
-    //mainWindow.show();
     return app.exec();
 }
