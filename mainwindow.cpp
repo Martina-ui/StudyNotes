@@ -11,6 +11,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->profileButton, &QPushButton::clicked,
             this, &MainWindow::profileRequested);
+
+    connect(ui->createNoteButton, &QPushButton::clicked,
+            this, &MainWindow::createNoteRequested);
 }
 
 MainWindow::~MainWindow()

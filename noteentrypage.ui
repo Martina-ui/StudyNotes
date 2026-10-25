@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NoteEntryPage</class>
+ <widget class="QWidget" name="NoteEntryPage">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>650</width><height>620</height></rect></property>
+  <property name="windowTitle"><string>StudyNotes - Create Note</string></property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#NoteEntryPage { background-color: #f4f7fb; color: #17365d; }
+QLabel { color: #17365d; }
+QLabel#titleLabel { color: #17365d; font-size: 26px; font-weight: bold; }
+QLabel#subtitleLabel { color: #60758b; font-size: 13px; }
+QLabel#noteTitleLabel, QLabel#contentLabel, QLabel#categoryLabel, QLabel#visibilityLabel { color: #17365d; font-size: 13px; font-weight: bold; }
+QLineEdit, QTextEdit, QComboBox { color: #17365d; selection-color: white; selection-background-color: #3678b5; background-color: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 13px; }
+QComboBox QAbstractItemView { color: #17365d; background-color: white; selection-color: white; selection-background-color: #3678b5; }
+QLineEdit:focus, QTextEdit:focus, QComboBox:focus { border: 2px solid #3678b5; }
+QPushButton#createNoteButton { background-color: #3678b5; color: white; border-radius: 6px; padding: 10px; font-weight: bold; }
+QPushButton#createNoteButton:hover { background-color: #285e91; }
+QPushButton#cancelButton { background-color: #e2e8f0; color: #17365d; border-radius: 6px; padding: 10px; font-weight: bold; }
+QPushButton#cancelButton:hover { background-color: #cbd5e1; }
+QLabel#statusLabel { font-size: 12px; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin"><number>45</number></property>
+   <property name="topMargin"><number>35</number></property>
+   <property name="rightMargin"><number>45</number></property>
+   <property name="bottomMargin"><number>35</number></property>
+   <property name="spacing"><number>12</number></property>
+   <item><widget class="QLabel" name="titleLabel"><property name="text"><string>Create a Note</string></property></widget></item>
+   <item><widget class="QLabel" name="subtitleLabel"><property name="text"><string>Write and organize your study notes.</string></property></widget></item>
+   <item><spacer name="topSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property></spacer></item>
+   <item><widget class="QLabel" name="noteTitleLabel"><property name="text"><string>Note Title</string></property></widget></item>
+   <item><widget class="QLineEdit" name="titleLineEdit"><property name="placeholderText"><string>Enter note title</string></property></widget></item>
+   <item><widget class="QLabel" name="contentLabel"><property name="text"><string>Note Content</string></property></widget></item>
+   <item><widget class="QTextEdit" name="contentTextEdit"><property name="placeholderText"><string>Write your notes here...</string></property></widget></item>
+   <item><widget class="QLabel" name="categoryLabel"><property name="text"><string>Course / Category</string></property></widget></item>
+   <item><widget class="QComboBox" name="categoryComboBox"/></item>
+   <item><widget class="QLabel" name="visibilityLabel"><property name="text"><string>Visibility</string></property></widget></item>
+   <item><widget class="QComboBox" name="visibilityComboBox"/></item>
+   <item><widget class="QLabel" name="statusLabel"><property name="text"><string/></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+   <item><layout class="QHBoxLayout" name="buttonLayout">
+    <item><widget class="QPushButton" name="cancelButton"><property name="text"><string>Cancel</string></property></widget></item>
+    <item><widget class="QPushButton" name="createNoteButton"><property name="text"><string>Create Note</string></property></widget></item>
+   </layout></item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

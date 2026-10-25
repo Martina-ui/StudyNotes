@@ -1,3 +1,4 @@
+#include "noteentrypage.h"
 #include "loginpage.h"
 #include "registerpage.h"
 #include "profilepage.h"
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
     LoginPage loginPage;
     RegisterPage registerPage;
     ProfilePage profilePage;
+    NoteEntryPage noteEntryPage;
     MainWindow mainWindow;
 
     QObject::connect(&loginPage, &LoginPage::registrationRequested,
@@ -35,6 +37,18 @@ int main(int argc, char *argv[])
     QObject::connect(&profilePage, &ProfilePage::backToHomeRequested,
                      &mainWindow, [&]() {
                          profilePage.hide();
+                         mainWindow.show();
+                     });
+
+    QObject::connect(&mainWindow, &MainWindow::createNoteRequested,
+                     &noteEntryPage, [&]() {
+                         mainWindow.hide();
+                         noteEntryPage.show();
+                     });
+
+    QObject::connect(&noteEntryPage, &NoteEntryPage::cancelRequested,
+                     &mainWindow, [&]() {
+                         noteEntryPage.hide();
                          mainWindow.show();
                      });
 
