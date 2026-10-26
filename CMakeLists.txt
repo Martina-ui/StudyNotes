@@ -33,6 +33,9 @@ set(PROJECT_SOURCES
     profilepage.cpp
     profilepage.h
     profilepage.ui
+
+    noteservice.cpp
+    noteservice.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
