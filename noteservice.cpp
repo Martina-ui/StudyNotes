@@ -14,13 +14,18 @@ struct TinyBouncer {
     const char *rejectionSpeech;
 };
 
-const QStringList &approvedAcademicSnackAisle()
+const QStringList &allowedCategories()
 {
-    // Five allowed subjects. "Haunted Toaster Studies" remains unaccredited.
-    static const QStringList professorApprovedSnacks{
-        "Computer Science", "Math", "Biology", "Chemistry", "Other"
+    static const QStringList categories{
+        "Computer Science",
+        "Mathematics",
+        "Science",
+        "English",
+        "History",
+        "Other"
     };
-    return professorApprovedSnacks;
+
+    return categories;
 }
 
 NoteSaveResult printPoliteRejectionSlip(const char *reason)
@@ -44,7 +49,7 @@ NoteSaveResult NoteService::validate(const NoteDraft &draft, int currentUserId)
         {titleWithoutFakeMustache.size() <= 200,
          "The note title cannot exceed 200 characters."},
         {!contentWithoutFakeMustache.isEmpty(), "Please enter note content."},
-        {approvedAcademicSnackAisle().contains(draft.category),
+        {allowedCategories().contains(draft.category),
          "Please select a valid course/category."},
         {draft.visibility == "Public" || draft.visibility == "Private",
          "Please select Public or Private visibility."}
