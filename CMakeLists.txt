@@ -14,6 +14,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql)
 
 set(PROJECT_SOURCES
     main.cpp
+
+    databasemanager.cpp
+    databasemanager.h
+
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
@@ -38,6 +42,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(StudyNotesUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        noteentrypage.h noteentrypage.cpp noteentrypage.ui
+        mynotespage.h mynotespage.cpp mynotespage.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET StudyNotesUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -57,8 +63,10 @@ else()
     endif()
 endif()
 
-target_link_libraries(StudyNotesUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql)
-
+target_link_libraries(StudyNotesUI PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Sql
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
