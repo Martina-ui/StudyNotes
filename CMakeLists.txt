@@ -9,8 +9,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Sql) #need this for backend -J
+
 
 set(PROJECT_SOURCES
     main.cpp
@@ -29,6 +32,11 @@ set(PROJECT_SOURCES
     profilepage.cpp
     profilepage.h
     profilepage.ui
+
+    account_manager.cpp #my files -J
+    account_manager.h
+    #login_manager.cpp [initial thought was to separate login (SQL reading)
+    #login_manager.h and registering (SQL writing), but maybe not. Kept in in case things change
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -55,6 +63,7 @@ else()
 endif()
 
 target_link_libraries(StudyNotesUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(StudyNotesUI PRIVATE Qt${QT_VERSION_MAJOR}::Sql) #backend, again
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
