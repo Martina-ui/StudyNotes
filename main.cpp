@@ -10,10 +10,16 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <sodium.h>
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    if (sodium_init() < 0) {
+        qCritical() << "Failed to initialize libsodium.";
+        return 1;
+    }
 
     QString databaseError;
 
@@ -34,6 +40,24 @@ int main(int argc, char *argv[])
     AccountManager accountManager;
 
     bool noteOpenedFromMyNotes = false;
+    int currentUserId = -1;
+    QString currentUsername;
+    QString currentRole;
+
+    QObject::connect(&accountManager, &AccountManager::userAuthenticated,
+                     &mainWindow,
+                     [&](int userId, const QString &username, const QString &role) {
+                         currentUserId = userId;
+                         currentUsername = username;
+                         currentRole = role;
+
+                         profilePage.setUserInfo(currentUsername, currentRole);
+
+                         qInfo() << "Authenticated user:"
+                                 << currentUsername
+                                 << "ID:" << currentUserId
+                                 << "Role:" << currentRole;
+                     });
 
     QObject::connect(&loginPage, &LoginPage::registrationRequested,
                      &registerPage, [&]() {
@@ -59,8 +83,6 @@ int main(int argc, char *argv[])
                          mainWindow.show();
                      });
 
-    accountManager.connectToDatabase();
-
     QObject::connect(&loginPage, &LoginPage::loginRequested,
                      &accountManager, &AccountManager::handleLoginRequest);
 
@@ -70,8 +92,20 @@ int main(int argc, char *argv[])
     QObject::connect(&accountManager, &AccountManager::loginFailure,
                      &loginPage, &LoginPage::showAuthenticationFailure);
 
+    QObject::connect(&loginPage, &LoginPage::authenticatedViewRequested,
+                     &mainWindow, [&]() {
+                         loginPage.hide();
+                         mainWindow.show();
+                     });
+
     QObject::connect(&registerPage, &RegisterPage::registrationRequested,
                      &accountManager, &AccountManager::handleRegistrationRequest);
+
+    QObject::connect(&accountManager, &AccountManager::registrationSuccess,
+                     &registerPage, &RegisterPage::showRegistrationSuccess);
+
+    QObject::connect(&accountManager, &AccountManager::registrationFailure,
+                     &registerPage, &RegisterPage::showRegistrationFailure);
 
     QObject::connect(&mainWindow, &MainWindow::myNotesRequested,
                      &myNotesPage, [&]() {
@@ -123,13 +157,9 @@ int main(int argc, char *argv[])
                          draft.category = category;
                          draft.visibility = visibility;
 
-                         bool userIdValid = false;
-                         int currentUserId = qEnvironmentVariableIntValue(
-                             "STUDYNOTES_TEST_USER_ID", &userIdValid);
-
-                         if (!userIdValid || currentUserId <= 0) {
+                         if (currentUserId <= 0) {
                              noteEntryPage.showSaveFailure(
-                                 "No test user configured. Please set STUDYNOTES_TEST_USER_ID.");
+                                 "You must be logged in to save notes.");
                              return;
                          }
 

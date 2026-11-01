@@ -1,96 +1,154 @@
 #include "account_manager.h"
+#include "databasemanager.h"
 
+#include <QDebug>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
-#include <QDebug>
-#include <QCryptographicHash> //password hasher
 
-//most notes on this cpp file are for writing out documentation on a separate file later
-//for now, this is for me and anyone else who'll have to go back and fix my shit
+#include <sodium.h>
 
-//note: hasher might explode, let me know if it does
-
-AccountManager::AccountManager(QObject *parent) : QObject(parent){}
-
-bool AccountManager::connectToDatabase()
+AccountManager::AccountManager(QObject *parent)
+    : QObject(parent)
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-
-    db.setHostName("localhost"); //these are my credentials for my local Postgresql
-    db.setDatabaseName("users"); //change these to the right database when we have to
-    db.setUserName("postgres");  //or change to your personal parameters if you're testing that
-    db.setPassword("postgres");  //I forgot my password fuck
-    db.setPort(5432);
-    if (!db.open()) {
-        qDebug() << "Failed to connect to PostgreSQL database:" << db.lastError().text(); //stole these debugging messages
-        return false; //all the qDebug() lines were <iostream> lines until I found out this is better.
-    }
-    qDebug() << "Successfully connected to PostgreSQL.";
-    return true;
 }
 
 void AccountManager::handleLoginRequest(const QString &username, const QString &password)
 {
-    if (!QSqlDatabase::database().isOpen()) {
-        qDebug() << "Database is not opening.";
-        emit loginFailure("Server database concection is lost.");
+    QSqlDatabase db = DatabaseManager::database();
+
+    if (!db.isValid() || !db.isOpen()) {
+        qWarning() << "AccountManager: Database connection is unavailable.";
+        emit loginFailure("Database connection is unavailable.");
         return;
     }
 
-    QSqlQuery query;
-    query.prepare("SELECT password_hash FROM users WHERE username = :username");
-    query.bindValue(":username", username);
+    QString cleanUsername = username.trimmed();
+
+    if (cleanUsername.isEmpty() || password.isEmpty()) {
+        emit loginFailure("Please enter your username and password.");
+        return;
+    }
+
+    QSqlQuery query(db);
+
+    query.prepare(
+        "SELECT user_id, username, role, password_hash "
+        "FROM users WHERE username = :username"
+        );
+
+    query.bindValue(":username", cleanUsername);
+
     if (!query.exec()) {
-        qDebug() << "Database query failed execution:" << query.lastError().text();
-        emit loginFailure("idk how to write queries, sorry.");
+        qWarning() << "AccountManager: Login query failed:"
+                   << query.lastError().text();
+
+        emit loginFailure("Unable to log in. Please try again.");
         return;
     }
 
-    if (query.next()) {
-        QString storedPassword = query.value(0).toString();
-        QByteArray loginPasswordData = password.toUtf8(); //login hasher
-        QString passwordHash = QCryptographicHash::hash(loginPasswordData, QCryptographicHash::Sha256).toHex();
-        if (storedPassword == passwordHash) {
-            qDebug() << "Login verified for user:" << username;
-            emit loginSuccess();
-        }
-        else {
-            qDebug() << "Login failed: Incorrect password.";
-            emit loginFailure("Incorrect username or password.");
-        }
+    if (!query.next()) {
+        emit loginFailure("Incorrect username or password.");
+        return;
     }
-    else {
-        qDebug() << "Login failed: Username not found.";
+
+    int userId = query.value(0).toInt();
+    QString authenticatedUsername = query.value(1).toString();
+    QString userRole = query.value(2).toString();
+
+    QByteArray storedHash = query.value(3).toString().toUtf8();
+    QByteArray passwordData = password.toUtf8();
+
+    int result = crypto_pwhash_str_verify(
+        storedHash.constData(),
+        passwordData.constData(),
+        static_cast<unsigned long long>(passwordData.size())
+        );
+
+    if (result == 0) {
+        qInfo() << "AccountManager: Login successful for user:" << authenticatedUsername;
+        emit userAuthenticated(userId, authenticatedUsername, userRole);
+        emit loginSuccess();
+    } else {
         emit loginFailure("Incorrect username or password.");
     }
 }
 
-
 void AccountManager::handleRegistrationRequest(const QString &username, const QString &password)
 {
-    if (!QSqlDatabase::database().isOpen()) {
-        qDebug() << "Database is fucked.";
-        emit loginFailure("Server database concection is lost.");
+    QSqlDatabase db = DatabaseManager::database();
+
+    if (!db.isValid() || !db.isOpen()) {
+        qWarning() << "AccountManager: Database connection is unavailable.";
+        emit registrationFailure("Database connection is unavailable.");
         return;
     }
-    // password hasher
+
+    QString cleanUsername = username.trimmed();
+
+    if (cleanUsername.isEmpty()) {
+        emit registrationFailure("Username cannot be empty.");
+        return;
+    }
+
+    if (cleanUsername.length() > 15) {
+        emit registrationFailure("Username must be 15 characters or less.");
+        return;
+    }
+
+    if (password.isEmpty()) {
+        emit registrationFailure("Password cannot be empty.");
+        return;
+    }
+
     QByteArray passwordData = password.toUtf8();
-    QString hashedBytes = QCryptographicHash::hash(passwordData, QCryptographicHash::Sha256).toHex();
-    QSqlQuery query;
-    query.prepare("INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)");
-    query.bindValue(":username", username);
-    query.bindValue(":password_hash", hashedBytes);
-    if (!query.exec()) {
-        qDebug() << "Registration failed:" << query.lastError().text();
-        if (query.lastError().nativeErrorCode() == "23505") { //error code for duplicates
-            emit registrationFailure("This username is already taken.");
-        }
-        else {
-            emit registrationFailure("The database is wrong somehow.");
-        }
+
+    if (password.length() < 8) {
+        emit registrationFailure("Password must be at least 8 characters long.");
         return;
     }
-    qDebug() << "Successfully registered new account for:" << username;
+
+    char hashedPassword[crypto_pwhash_STRBYTES];
+
+    int result = crypto_pwhash_str_alg(
+        hashedPassword,
+        passwordData.constData(),
+        static_cast<unsigned long long>(passwordData.size()),
+        crypto_pwhash_OPSLIMIT_INTERACTIVE,
+        crypto_pwhash_MEMLIMIT_INTERACTIVE,
+        crypto_pwhash_ALG_ARGON2ID13
+        );
+
+    if (result != 0) {
+        qWarning() << "AccountManager: Password hashing failed.";
+        emit registrationFailure("Unable to securely store password.");
+        return;
+    }
+
+    QSqlQuery query(db);
+
+    query.prepare(
+        "INSERT INTO users (username, password_hash) "
+        "VALUES (:username, :password_hash)"
+        );
+
+    query.bindValue(":username", cleanUsername);
+    query.bindValue(":password_hash", QString::fromUtf8(hashedPassword));
+
+    if (!query.exec()) {
+        qWarning() << "AccountManager: Registration failed:"
+                   << query.lastError().text();
+
+        if (query.lastError().nativeErrorCode() == "23505") {
+            emit registrationFailure("This username is already taken.");
+        } else {
+            emit registrationFailure("Unable to register. Please try again.");
+        }
+
+        return;
+    }
+
+    qInfo() << "AccountManager: Successfully registered user:" << cleanUsername;
+
     emit registrationSuccess();
 }

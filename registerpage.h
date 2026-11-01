@@ -20,6 +20,10 @@ signals:
     void registrationRequested(const QString &username, const QString &password);
     void loginRequested();
 
+public slots:
+    void showRegistrationSuccess();
+    void showRegistrationFailure(const QString &message);
+
 private slots:
     void onRegisterClicked();
 

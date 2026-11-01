@@ -10,7 +10,6 @@ class AccountManager : public QObject
 
 public:
     explicit AccountManager(QObject *parent = nullptr);
-    bool connectToDatabase();
 
 public slots:
     void handleLoginRequest(const QString &username, const QString &password);
@@ -18,10 +17,10 @@ public slots:
 
 signals:
     void loginSuccess();
-    void loginFailure(const QString &errorMessage);
+    void loginFailure(const QString &message);
     void registrationSuccess();
-    void registrationFailure(const QString &errorMessage);
-}; //jumped into the deep end and drowned 5 times over just to get partially there
+    void registrationFailure(const QString &message);
+    void userAuthenticated(int userId, const QString &username, const QString &role);
+};
 
 #endif
-

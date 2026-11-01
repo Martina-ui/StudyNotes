@@ -26,3 +26,14 @@ cmake_install.cmake
 # Environment files
 .env
 .env.*
+
+# Bundled libsodium dependencies for Windows MinGW
+!third_party/libsodium/bin/
+!third_party/libsodium/bin/libsodium-26.dll
+!third_party/libsodium/lib/
+!third_party/libsodium/lib/libsodium.dll.a
+
+# Unnecessary libsodium distribution files
+third_party/libsodium/lib/*.la
+third_party/libsodium/lib/pkgconfig/
+third_party/libsodium/bin/*.def
