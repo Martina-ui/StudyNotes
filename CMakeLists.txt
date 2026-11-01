@@ -9,14 +9,15 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Sql) #need this for backend -J
-
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql)
 
 set(PROJECT_SOURCES
     main.cpp
+
+    databasemanager.cpp
+    databasemanager.h
+
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
@@ -33,16 +34,19 @@ set(PROJECT_SOURCES
     profilepage.h
     profilepage.ui
 
-    account_manager.cpp #my files -J
+    account_manager.cpp
     account_manager.h
-    #login_manager.cpp [initial thought was to separate login (SQL reading)
-    #login_manager.h and registering (SQL writing), but maybe not. Kept in in case things change
+
+    noteservice.cpp
+    noteservice.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(StudyNotesUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        noteentrypage.h noteentrypage.cpp noteentrypage.ui
+        mynotespage.h mynotespage.cpp mynotespage.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET StudyNotesUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -62,9 +66,10 @@ else()
     endif()
 endif()
 
-target_link_libraries(StudyNotesUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(StudyNotesUI PRIVATE Qt${QT_VERSION_MAJOR}::Sql) #backend, again
-
+target_link_libraries(StudyNotesUI PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Sql
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
