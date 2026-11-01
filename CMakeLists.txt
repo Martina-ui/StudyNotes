@@ -34,6 +34,9 @@ set(PROJECT_SOURCES
     profilepage.h
     profilepage.ui
 
+    account_manager.cpp
+    account_manager.h
+
     noteservice.cpp
     noteservice.h
 )
@@ -45,17 +48,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         noteentrypage.h noteentrypage.cpp noteentrypage.ui
         mynotespage.h mynotespage.cpp mynotespage.ui
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET StudyNotesUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
         add_library(StudyNotesUI SHARED
             ${PROJECT_SOURCES}
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(StudyNotesUI
             ${PROJECT_SOURCES}
@@ -63,16 +60,65 @@ else()
     endif()
 endif()
 
+#libsodium configuration for Windows and macOS
+if(WIN32)
+
+    set(SODIUM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium")
+
+    if(NOT EXISTS "${SODIUM_ROOT}/include/sodium.h")
+        message(FATAL_ERROR "libsodium header not found in third_party/libsodium/include")
+    endif()
+
+    if(NOT EXISTS "${SODIUM_ROOT}/lib/libsodium.dll.a")
+        message(FATAL_ERROR "libsodium import library not found in third_party/libsodium/lib")
+    endif()
+
+    if(NOT EXISTS "${SODIUM_ROOT}/bin/libsodium-26.dll")
+        message(FATAL_ERROR "libsodium DLL not found in third_party/libsodium/bin")
+    endif()
+
+    add_library(sodium SHARED IMPORTED)
+
+    set_target_properties(sodium PROPERTIES
+        IMPORTED_IMPLIB "${SODIUM_ROOT}/lib/libsodium.dll.a"
+        IMPORTED_LOCATION "${SODIUM_ROOT}/bin/libsodium-26.dll"
+        INTERFACE_INCLUDE_DIRECTORIES "${SODIUM_ROOT}/include"
+    )
+
+elseif(APPLE)
+
+    find_package(PkgConfig REQUIRED)
+
+    pkg_check_modules(SODIUM REQUIRED IMPORTED_TARGET libsodium)
+
+    add_library(sodium ALIAS PkgConfig::SODIUM)
+
+else()
+
+    message(FATAL_ERROR "StudyNotes currently supports Windows and macOS.")
+
+endif()
+
 target_link_libraries(StudyNotesUI PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Sql
+    sodium
 )
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.StudyNotesUI)
+
+#copy the libsodium DLL next to the executable on Windows
+if(WIN32)
+    add_custom_command(TARGET StudyNotesUI POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${SODIUM_ROOT}/bin/libsodium-26.dll"
+            "$<TARGET_FILE_DIR:StudyNotesUI>"
+    )
 endif()
+
+#application properties
+if(${QT_VERSION} VERSION_LESS 6.1.0)
+    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.StudyNotesUI)
+endif()
+
 set_target_properties(StudyNotesUI PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -82,6 +128,7 @@ set_target_properties(StudyNotesUI PROPERTIES
 )
 
 include(GNUInstallDirs)
+
 install(TARGETS StudyNotesUI
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

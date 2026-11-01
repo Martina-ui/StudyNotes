@@ -4,22 +4,29 @@
 #include "registerpage.h"
 #include "profilepage.h"
 #include "mainwindow.h"
+#include "account_manager.h"
 #include "databasemanager.h"
 #include "noteservice.h"
 
 #include <QApplication>
 #include <QDebug>
+#include <sodium.h>
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
+    if (sodium_init() < 0) {
+        qCritical() << "Failed to initialize libsodium.";
+        return 1;
+    }
+
     QString databaseError;
 
     if (!DatabaseManager::openConnection(&databaseError)) {
         qWarning().noquote()
-            << "StudyNotes database connection failed:"
-            << databaseError;
+        << "StudyNotes database connection failed:"
+        << databaseError;
     } else {
         qInfo() << "StudyNotes database connected successfully!";
     }
@@ -30,8 +37,27 @@ int main(int argc, char *argv[])
     NoteEntryPage noteEntryPage;
     MyNotesPage myNotesPage;
     MainWindow mainWindow;
+    AccountManager accountManager;
 
     bool noteOpenedFromMyNotes = false;
+    int currentUserId = -1;
+    QString currentUsername;
+    QString currentRole;
+
+    QObject::connect(&accountManager, &AccountManager::userAuthenticated,
+                     &mainWindow,
+                     [&](int userId, const QString &username, const QString &role) {
+                         currentUserId = userId;
+                         currentUsername = username;
+                         currentRole = role;
+
+                         profilePage.setUserInfo(currentUsername, currentRole);
+
+                         qInfo() << "Authenticated user:"
+                                 << currentUsername
+                                 << "ID:" << currentUserId
+                                 << "Role:" << currentRole;
+                     });
 
     QObject::connect(&loginPage, &LoginPage::registrationRequested,
                      &registerPage, [&]() {
@@ -56,6 +82,30 @@ int main(int argc, char *argv[])
                          profilePage.hide();
                          mainWindow.show();
                      });
+
+    QObject::connect(&loginPage, &LoginPage::loginRequested,
+                     &accountManager, &AccountManager::handleLoginRequest);
+
+    QObject::connect(&accountManager, &AccountManager::loginSuccess,
+                     &loginPage, &LoginPage::showAuthenticationSuccess);
+
+    QObject::connect(&accountManager, &AccountManager::loginFailure,
+                     &loginPage, &LoginPage::showAuthenticationFailure);
+
+    QObject::connect(&loginPage, &LoginPage::authenticatedViewRequested,
+                     &mainWindow, [&]() {
+                         loginPage.hide();
+                         mainWindow.show();
+                     });
+
+    QObject::connect(&registerPage, &RegisterPage::registrationRequested,
+                     &accountManager, &AccountManager::handleRegistrationRequest);
+
+    QObject::connect(&accountManager, &AccountManager::registrationSuccess,
+                     &registerPage, &RegisterPage::showRegistrationSuccess);
+
+    QObject::connect(&accountManager, &AccountManager::registrationFailure,
+                     &registerPage, &RegisterPage::showRegistrationFailure);
 
     QObject::connect(&mainWindow, &MainWindow::myNotesRequested,
                      &myNotesPage, [&]() {
@@ -86,12 +136,14 @@ int main(int argc, char *argv[])
     QObject::connect(&noteEntryPage, &NoteEntryPage::cancelRequested,
                      &mainWindow, [&]() {
                          noteEntryPage.hide();
+
                          if (noteOpenedFromMyNotes) {
                              myNotesPage.show();
                          } else {
                              mainWindow.show();
                          }
                      });
+
     QObject::connect(&noteEntryPage, &NoteEntryPage::noteCreationRequested,
                      &noteEntryPage,
                      [&](const QString &title,
@@ -105,13 +157,9 @@ int main(int argc, char *argv[])
                          draft.category = category;
                          draft.visibility = visibility;
 
-                         bool userIdValid = false;
-                         int currentUserId = qEnvironmentVariableIntValue(
-                             "STUDYNOTES_TEST_USER_ID", &userIdValid);
-
-                         if (!userIdValid || currentUserId <= 0) {
+                         if (currentUserId <= 0) {
                              noteEntryPage.showSaveFailure(
-                                 "No test user configured. Please set STUDYNOTES_TEST_USER_ID.");
+                                 "You must be logged in to save notes.");
                              return;
                          }
 
@@ -129,6 +177,8 @@ int main(int argc, char *argv[])
                              qWarning() << "Unable to save note:" << result.message;
                          }
                      });
+
     loginPage.show();
+
     return app.exec();
 }
