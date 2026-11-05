@@ -1,5 +1,6 @@
 #include "account_manager.h"
 #include "databasemanager.h"
+#include "sessionmanager.h"
 
 #include <QDebug>
 #include <QSqlDatabase>
@@ -67,6 +68,7 @@ void AccountManager::handleLoginRequest(const QString &username, const QString &
 
     if (result == 0) {
         qInfo() << "AccountManager: Login successful for user:" << authenticatedUsername;
+        SessionManager::instance().startSession(userId, userRole); //creates a session manager object with user_id and role saved
         emit userAuthenticated(userId, authenticatedUsername, userRole);
         emit loginSuccess();
     } else {
@@ -151,4 +153,17 @@ void AccountManager::handleRegistrationRequest(const QString &username, const QS
     qInfo() << "AccountManager: Successfully registered user:" << cleanUsername;
 
     emit registrationSuccess();
+}
+
+void AccountManager::handleLogoutRequest()
+{
+    // if you get this warning, you connected something funny
+    if (!SessionManager::instance().isLoggedIn()) {
+        qWarning() << "AccountManager: Attempted to log out, but no active session was found.";
+        return;
+    }
+
+    SessionManager::instance().clearSession();
+    qInfo() << "AccountManager: User successfully logged out backend-side.";
+    emit logoutSuccess();
 }

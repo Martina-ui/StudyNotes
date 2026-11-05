@@ -77,6 +77,15 @@ int main(int argc, char *argv[])
                          profilePage.show();
                      });
 
+    QObject::connect(&mainWindow, &MainWindow::logoutRequested,
+                     &accountManager, &AccountManager::handleLogoutRequest);
+
+    QObject::connect(&accountManager, &AccountManager::logoutSuccess,
+                     &loginPage, [&]() {
+                         mainWindow.hide();
+                         loginPage.show();
+                     });
+
     QObject::connect(&profilePage, &ProfilePage::backToHomeRequested,
                      &mainWindow, [&]() {
                          profilePage.hide();

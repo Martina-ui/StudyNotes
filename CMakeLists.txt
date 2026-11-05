@@ -37,16 +37,24 @@ set(PROJECT_SOURCES
     account_manager.cpp
     account_manager.h
 
+    sessionmanager.h
+
     noteservice.cpp
     noteservice.h
+
+    noteentrypage.cpp
+    noteentrypage.h
+    noteentrypage.ui
+
+    mynotespage.cpp
+    mynotespage.h
+    mynotespage.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(StudyNotesUI
         MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-        noteentrypage.h noteentrypage.cpp noteentrypage.ui
-        mynotespage.h mynotespage.cpp mynotespage.ui
+        ${PROJECT_SOURCES} #I moved all the newly created files into the project sources section
     )
 else()
     if(ANDROID)
