@@ -155,3 +155,46 @@ NoteLoadResult NoteService::loadUserNotes(const QSqlDatabase &database,
     result.success = true;
     return result;
 }
+
+
+NoteLoadResult NoteService::loadPublicNotes(const QSqlDatabase &database)
+{
+    NoteLoadResult result;
+
+    if (!database.isValid() || !database.isOpen()) {
+        result.message = "The database connection is not available.";
+        return result;
+    }
+
+    QSqlQuery query(database);
+
+    if (!query.prepare(
+            "SELECT note_id, title, category, content, visibility "
+            "FROM notes "
+            "WHERE visibility = :visibility "
+            "ORDER BY note_id DESC"
+            )) {
+        result.message = "Unable to prepare the public notes query.";
+        return result;
+    }
+
+    query.bindValue(":visibility", "Public");
+
+    if (!query.exec()) {
+        result.message = "Unable to load public notes. Please try again.";
+        return result;
+    }
+
+    while (query.next()) {
+        NoteSummary note;
+        note.noteId = query.value(0).toInt();
+        note.title = query.value(1).toString();
+        note.category = query.value(2).toString();
+        note.content = query.value(3).toString();
+        note.visibility = query.value(4).toString();
+        result.notes.append(note);
+    }
+
+    result.success = true;
+    return result;
+}

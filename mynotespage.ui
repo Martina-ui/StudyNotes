@@ -24,6 +24,8 @@ QLabel#statusLabel { color: #c0392b; }
 QListWidget, QTextEdit { background: white; color: #17365d; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 13px; selection-background-color: #dbeafe; selection-color: #17365d; }
 QPushButton { background-color: #e2e8f0; color: #17365d; border: none; border-radius: 6px; padding: 10px 16px; font-weight: bold; }
 QPushButton:hover { background-color: #cbd5e1; }
+QComboBox { background-color: white; color: #17365d; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; min-width: 160px; }
+QComboBox QAbstractItemView { background-color: white; color: #17365d; selection-background-color: #dbeafe; selection-color: #17365d; }
 QPushButton:disabled { background-color: #edf0f4; color: #8997a8; }
 QPushButton#createNoteButton { background-color: #3678b5; color: white; }
 QPushButton#createNoteButton:hover { background-color: #285e91; }
@@ -63,6 +65,50 @@ QPushButton#deleteButton:hover {
      </property>
     </widget>
    </item>
+
+<item>
+ <layout class="QHBoxLayout" name="sortLayout">
+  <item>
+   <widget class="QLabel" name="sortLabel">
+    <property name="text">
+     <string>Sort by:</string>
+    </property>
+   </widget>
+  </item>
+  <item>
+   <widget class="QComboBox" name="sortComboBox">
+    <item>
+     <property name="text">
+      <string>Newest First</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Class / Category</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Title (A-Z)</string>
+     </property>
+    </item>
+   </widget>
+  </item>
+  <item>
+   <spacer name="sortSpacer">
+    <property name="orientation">
+     <enum>Qt::Orientation::Horizontal</enum>
+    </property>
+    <property name="sizeHint" stdset="0">
+     <size>
+      <width>40</width>
+      <height>20</height>
+     </size>
+    </property>
+   </spacer>
+  </item>
+ </layout>
+</item>
    <item>
     <layout class="QHBoxLayout" name="notesLayout">
      <property name="spacing">

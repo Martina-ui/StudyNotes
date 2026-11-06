@@ -8,6 +8,7 @@
 #include "databasemanager.h"
 #include "noteservice.h"
 #include "sessionmanager.h"
+#include "publicnotespage.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
     ProfilePage profilePage;
     NoteEntryPage noteEntryPage;
     MyNotesPage myNotesPage;
+    PublicNotesPage publicNotesPage;
     MainWindow mainWindow;
     AccountManager accountManager;
 
@@ -84,6 +86,8 @@ int main(int argc, char *argv[])
                          myNotesPage.hide();
                          noteEntryPage.hide();
                          myNotesPage.clearNotes();
+                         publicNotesPage.hide();
+                         publicNotesPage.clearNotes();
                          noteOpenedFromMyNotes = false;
                          loginPage.show();
                      });
@@ -135,6 +139,31 @@ int main(int argc, char *argv[])
                          }
                          mainWindow.hide();
                          myNotesPage.show();
+                     });
+
+
+    QObject::connect(&mainWindow, &MainWindow::publicNotesRequested,
+                     &publicNotesPage, [&]() {
+                         if (!SessionManager::instance().isLoggedIn()) {
+                             return;
+                         }
+                         NoteLoadResult result = NoteService::loadPublicNotes(
+                             DatabaseManager::database()
+                             );
+                         if (result.success) {
+                             publicNotesPage.setNotes(result.notes);
+                         } else {
+                             publicNotesPage.clearNotes();
+                             publicNotesPage.showError(result.message);
+                         }
+                         mainWindow.hide();
+                         publicNotesPage.show();
+                     });
+
+    QObject::connect(&publicNotesPage, &PublicNotesPage::backRequested,
+                     &mainWindow, [&]() {
+                         publicNotesPage.hide();
+                         mainWindow.show();
                      });
 
     QObject::connect(&myNotesPage, &MyNotesPage::backRequested,

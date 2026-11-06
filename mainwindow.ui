@@ -26,6 +26,9 @@ QPushButton#profileButton:pressed { background-color: #264470; }
 QPushButton#myNotesButton { background-color: #e2e8f0; color: #17365d; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 600; }
 QPushButton#myNotesButton:hover { background-color: #cbd5e1; }
 QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }
+QPushButton#publicNotesButton { background-color: #e2e8f0; color: #17365d; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 600; }
+QPushButton#publicNotesButton:hover { background-color: #cbd5e1; }
+QPushButton#publicNotesButton:pressed { background-color: #b5c3d5; }
 QPushButton#logoutButton { background-color: #e2e8f0; color: #17365d; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; }
 QPushButton#logoutButton:hover { background-color: #cbd5e1; }
 QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
@@ -71,7 +74,7 @@ QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
       <property name="sizeHint" stdset="0">
        <size>
         <width>20</width>
-        <height>100</height>
+        <height>70</height>
        </size>
       </property>
      </spacer>
@@ -113,21 +116,14 @@ QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
      </spacer>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="buttonLayout">
-      <item>
-       <spacer name="leftSpacer">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
+     <layout class="QGridLayout" name="buttonLayout">
+      <property name="horizontalSpacing">
+       <number>16</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>14</number>
+      </property>
+      <item row="0" column="0">
        <widget class="QPushButton" name="createNoteButton">
         <property name="minimumSize">
          <size>
@@ -140,7 +136,7 @@ QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1">
        <widget class="QPushButton" name="myNotesButton">
         <property name="minimumSize">
          <size>
@@ -153,7 +149,20 @@ QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="publicNotesButton">
+        <property name="minimumSize">
+         <size>
+          <width>170</width>
+          <height>46</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Public Notes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
        <widget class="QPushButton" name="profileButton">
         <property name="minimumSize">
          <size>
@@ -166,19 +175,6 @@ QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
         </property>
        </widget>
       </item>
-      <item>
-       <spacer name="rightSpacer">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
      </layout>
     </item>
     <item>
@@ -189,7 +185,7 @@ QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
       <property name="sizeHint" stdset="0">
        <size>
         <width>20</width>
-        <height>130</height>
+        <height>100</height>
        </size>
       </property>
      </spacer>
