@@ -19,6 +19,7 @@ signals:
     void profileRequested();
     void createNoteRequested();
     void myNotesRequested();
+    void publicNotesRequested();
     void logoutRequested();
 
 private:

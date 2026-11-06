@@ -49,6 +49,10 @@ set(PROJECT_SOURCES
     mynotespage.cpp
     mynotespage.h
     mynotespage.ui
+
+    publicnotespage.cpp
+    publicnotespage.h
+    publicnotespage.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -35,6 +35,7 @@ public:
                                       const NoteDraft &draft);
     static NoteLoadResult loadUserNotes(const QSqlDatabase &database,
                                         int currentUserId);
+    static NoteLoadResult loadPublicNotes(const QSqlDatabase &database);
 };
 
 #endif // NOTESERVICE_H

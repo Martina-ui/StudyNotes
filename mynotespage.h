@@ -40,10 +40,12 @@ private slots:
     void onNoteSelected(int row);
     void onEditClicked();
     void onDeleteClicked();
+    void onSortChanged(int index);
 
 private:
     Ui::MyNotesPage *ui;
     QList<NoteSummary> currentNotes;
+    void displayNotes();
     void updateSelection();
 };
 

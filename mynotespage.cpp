@@ -1,6 +1,8 @@
 #include "mynotespage.h"
 #include "ui_mynotespage.h"
 
+#include <QComboBox>
+#include <algorithm>
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QPushButton>
@@ -10,6 +12,8 @@ MyNotesPage::MyNotesPage(QWidget *parent)
 {
     ui->setupUi(this);
 
+    connect(ui->sortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MyNotesPage::onSortChanged);
     connect(ui->notesListWidget, &QListWidget::currentRowChanged,
             this, &MyNotesPage::onNoteSelected);
     connect(ui->createNoteButton, &QPushButton::clicked,
@@ -32,23 +36,58 @@ MyNotesPage::~MyNotesPage()
 void MyNotesPage::setNotes(const QList<NoteSummary> &notes)
 {
     currentNotes = notes;
-    ui->notesListWidget->clear();
     ui->statusLabel->clear();
+    displayNotes();
+}
+
+
+void MyNotesPage::onSortChanged(int)
+{
+    displayNotes();
+}
+
+void MyNotesPage::displayNotes()
+{
+    int sortOption = ui->sortComboBox->currentIndex();
+    if (sortOption == 1) {
+        std::sort(currentNotes.begin(), currentNotes.end(),
+                  [](const NoteSummary &a, const NoteSummary &b) {
+                      int categoryComparison = QString::compare(
+                          a.category, b.category, Qt::CaseInsensitive);
+                      if (categoryComparison == 0) {
+                          return QString::compare(
+                                     a.title, b.title, Qt::CaseInsensitive) < 0;
+                      }
+                      return categoryComparison < 0;
+                  });
+    } else if (sortOption == 2) {
+        std::sort(currentNotes.begin(), currentNotes.end(),
+                  [](const NoteSummary &a, const NoteSummary &b) {
+                      return QString::compare(
+                                 a.title, b.title, Qt::CaseInsensitive) < 0;
+                  });
+    } else {
+        std::sort(currentNotes.begin(), currentNotes.end(),
+                  [](const NoteSummary &a, const NoteSummary &b) {
+                      return a.noteId > b.noteId;
+                  });
+    }
+    ui->notesListWidget->clear();
 
     for (const NoteSummary &note : currentNotes) {
         ui->notesListWidget->addItem(note.title + "\n" + note.category);
     }
-
     if (currentNotes.isEmpty()) {
-        ui->emptyLabel->setText("You don't have any notes yet. Create your first note!");
+        ui->emptyLabel->setText(
+            "You don't have any notes yet. Create your first note!");
         ui->emptyLabel->show();
     } else {
         ui->emptyLabel->hide();
         ui->notesListWidget->setCurrentRow(0);
     }
-
     updateSelection();
 }
+
 
 void MyNotesPage::clearNotes()
 {
