@@ -1,5 +1,7 @@
 #ifndef NOTESERVICE_H
 #define NOTESERVICE_H
+#include <QList>
+#include "mynotespage.h"
 
 #include <QSqlDatabase>
 #include <QString>
@@ -19,12 +21,20 @@ struct NoteSaveResult {
     int noteId = -1;
 };
 
+struct NoteLoadResult {
+    bool success = false;
+    QString message;
+    QList<NoteSummary> notes;
+};
+
 class NoteService {
 public:
     static NoteSaveResult validate(const NoteDraft &draft, int currentUserId);
     static NoteSaveResult saveNewNote(const QSqlDatabase &database,
                                       int currentUserId,
                                       const NoteDraft &draft);
+    static NoteLoadResult loadUserNotes(const QSqlDatabase &database,
+                                        int currentUserId);
 };
 
 #endif // NOTESERVICE_H

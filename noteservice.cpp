@@ -115,3 +115,43 @@ NoteSaveResult NoteService::saveNewNote(const QSqlDatabase &database,
     }
     return {true, "Note saved successfully.", receiptFromTheDatabaseDragon};
 }
+
+NoteLoadResult NoteService::loadUserNotes(const QSqlDatabase &database,
+                                          int currentUserId)
+{
+    NoteLoadResult result;
+    if (currentUserId <= 0) {
+        result.message = "You must be logged in to view your notes.";
+        return result;
+    }
+    if (!database.isValid() || !database.isOpen()) {
+        result.message = "The database connection is not available.";
+        return result;
+    }
+    QSqlQuery query(database);
+    if (!query.prepare(
+            "SELECT note_id, title, category, content, visibility "
+            "FROM notes "
+            "WHERE user_id = :user_id "
+            "ORDER BY note_id DESC"
+            )) {
+        result.message = "Unable to prepare the note retrieval operation.";
+        return result;
+    }
+    query.bindValue(":user_id", currentUserId);
+    if (!query.exec()) {
+        result.message = "Unable to load your notes. Please try again.";
+        return result;
+    }
+    while (query.next()) {
+        NoteSummary note;
+        note.noteId = query.value(0).toInt();
+        note.title = query.value(1).toString();
+        note.category = query.value(2).toString();
+        note.content = query.value(3).toString();
+        note.visibility = query.value(4).toString();
+        result.notes.append(note);
+    }
+    result.success = true;
+    return result;
+}

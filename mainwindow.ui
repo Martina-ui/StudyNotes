@@ -25,7 +25,10 @@ QPushButton#profileButton:hover { background-color: #31568e; }
 QPushButton#profileButton:pressed { background-color: #264470; }
 QPushButton#myNotesButton { background-color: #e2e8f0; color: #17365d; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 600; }
 QPushButton#myNotesButton:hover { background-color: #cbd5e1; }
-QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
+QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }
+QPushButton#logoutButton { background-color: #e2e8f0; color: #17365d; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; }
+QPushButton#logoutButton:hover { background-color: #cbd5e1; }
+QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -43,6 +46,18 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
     </property>
     <item alignment="Qt::AlignmentFlag::AlignRight">
      <widget class="QPushButton" name="logoutButton">
+      <property name="minimumSize">
+       <size>
+        <width>100</width>
+        <height>36</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>120</width>
+        <height>40</height>
+       </size>
+      </property>
       <property name="text">
        <string>Logout</string>
       </property>
