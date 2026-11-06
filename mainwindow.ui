@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -25,7 +25,10 @@ QPushButton#profileButton:hover { background-color: #31568e; }
 QPushButton#profileButton:pressed { background-color: #264470; }
 QPushButton#myNotesButton { background-color: #e2e8f0; color: #17365d; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; font-weight: 600; }
 QPushButton#myNotesButton:hover { background-color: #cbd5e1; }
-QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
+QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }
+QPushButton#logoutButton { background-color: #e2e8f0; color: #17365d; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; }
+QPushButton#logoutButton:hover { background-color: #cbd5e1; }
+QPushButton#logoutButton:pressed { background-color: #b5c3d5; }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -41,10 +44,29 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
     <property name="bottomMargin">
      <number>40</number>
     </property>
+    <item alignment="Qt::AlignmentFlag::AlignRight">
+     <widget class="QPushButton" name="logoutButton">
+      <property name="minimumSize">
+       <size>
+        <width>100</width>
+        <height>36</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>120</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Logout</string>
+      </property>
+     </widget>
+    </item>
     <item>
      <spacer name="topSpacer">
       <property name="orientation">
-       <enum>Qt::Vertical</enum>
+       <enum>Qt::Orientation::Vertical</enum>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
@@ -60,7 +82,7 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
        <string>Welcome to StudyNotes</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignCenter</set>
+       <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
      </widget>
     </item>
@@ -70,7 +92,7 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
        <string>Keep your class notes organized and easy to find.</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignCenter</set>
+       <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
@@ -80,7 +102,7 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
     <item>
      <spacer name="middleSpacer">
       <property name="orientation">
-       <enum>Qt::Vertical</enum>
+       <enum>Qt::Orientation::Vertical</enum>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
@@ -95,7 +117,7 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
       <item>
        <spacer name="leftSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -147,7 +169,7 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
       <item>
        <spacer name="rightSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -162,7 +184,7 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
     <item>
      <spacer name="bottomSpacer">
       <property name="orientation">
-       <enum>Qt::Vertical</enum>
+       <enum>Qt::Orientation::Vertical</enum>
       </property>
       <property name="sizeHint" stdset="0">
        <size>
@@ -174,8 +196,8 @@ QPushButton#myNotesButton:pressed { background-color: #b5c3d5; }</string>
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar" />
+  <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources />
- <connections />
+ <resources/>
+ <connections/>
 </ui>

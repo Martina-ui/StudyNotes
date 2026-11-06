@@ -13,10 +13,12 @@ public:
 
 public slots:
     void handleLoginRequest(const QString &username, const QString &password);
+    void handleLogoutRequest();
     void handleRegistrationRequest(const QString &username, const QString &password);
 
 signals:
     void loginSuccess();
+    void logoutSuccess();
     void loginFailure(const QString &message);
     void registrationSuccess();
     void registrationFailure(const QString &message);

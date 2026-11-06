@@ -7,6 +7,7 @@
 #include "account_manager.h"
 #include "databasemanager.h"
 #include "noteservice.h"
+#include "sessionmanager.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -40,23 +41,15 @@ int main(int argc, char *argv[])
     AccountManager accountManager;
 
     bool noteOpenedFromMyNotes = false;
-    int currentUserId = -1;
-    QString currentUsername;
-    QString currentRole;
 
     QObject::connect(&accountManager, &AccountManager::userAuthenticated,
                      &mainWindow,
                      [&](int userId, const QString &username, const QString &role) {
-                         currentUserId = userId;
-                         currentUsername = username;
-                         currentRole = role;
-
-                         profilePage.setUserInfo(currentUsername, currentRole);
-
+                         profilePage.setUserInfo(username, role);
                          qInfo() << "Authenticated user:"
-                                 << currentUsername
-                                 << "ID:" << currentUserId
-                                 << "Role:" << currentRole;
+                                 << username
+                                 << "ID:" << userId
+                                 << "Role:" << role;
                      });
 
     QObject::connect(&loginPage, &LoginPage::registrationRequested,
@@ -73,8 +66,26 @@ int main(int argc, char *argv[])
 
     QObject::connect(&mainWindow, &MainWindow::profileRequested,
                      &profilePage, [&]() {
+                         if (!SessionManager::instance().isLoggedIn()) {
+                             return;
+                         }
                          mainWindow.hide();
                          profilePage.show();
+                     });
+
+    QObject::connect(&mainWindow, &MainWindow::logoutRequested,
+                     &accountManager, &AccountManager::handleLogoutRequest);
+
+    QObject::connect(&accountManager, &AccountManager::logoutSuccess,
+                     &loginPage, [&]() {
+                         loginPage.clearFields();
+                         mainWindow.hide();
+                         profilePage.hide();
+                         myNotesPage.hide();
+                         noteEntryPage.hide();
+                         myNotesPage.clearNotes();
+                         noteOpenedFromMyNotes = false;
+                         loginPage.show();
                      });
 
     QObject::connect(&profilePage, &ProfilePage::backToHomeRequested,
@@ -109,6 +120,19 @@ int main(int argc, char *argv[])
 
     QObject::connect(&mainWindow, &MainWindow::myNotesRequested,
                      &myNotesPage, [&]() {
+                         if (!SessionManager::instance().isLoggedIn()) {
+                             return;
+                         }
+                         NoteLoadResult result = NoteService::loadUserNotes(
+                             DatabaseManager::database(),
+                             SessionManager::instance().userId()
+                             );
+                         if (result.success) {
+                             myNotesPage.setNotes(result.notes);
+                         } else {
+                             myNotesPage.clearNotes();
+                             myNotesPage.showError(result.message);
+                         }
                          mainWindow.hide();
                          myNotesPage.show();
                      });
@@ -121,6 +145,9 @@ int main(int argc, char *argv[])
 
     QObject::connect(&mainWindow, &MainWindow::createNoteRequested,
                      &noteEntryPage, [&]() {
+                         if (!SessionManager::instance().isLoggedIn()) {
+                             return;
+                         }
                          noteOpenedFromMyNotes = false;
                          mainWindow.hide();
                          noteEntryPage.show();
@@ -128,6 +155,9 @@ int main(int argc, char *argv[])
 
     QObject::connect(&myNotesPage, &MyNotesPage::createNoteRequested,
                      &noteEntryPage, [&]() {
+                         if (!SessionManager::instance().isLoggedIn()) {
+                             return;
+                         }
                          noteOpenedFromMyNotes = true;
                          myNotesPage.hide();
                          noteEntryPage.show();
@@ -136,8 +166,21 @@ int main(int argc, char *argv[])
     QObject::connect(&noteEntryPage, &NoteEntryPage::cancelRequested,
                      &mainWindow, [&]() {
                          noteEntryPage.hide();
-
+                         if (!SessionManager::instance().isLoggedIn()) {
+                             loginPage.show();
+                             return;
+                         }
                          if (noteOpenedFromMyNotes) {
+                             NoteLoadResult result = NoteService::loadUserNotes(
+                                 DatabaseManager::database(),
+                                 SessionManager::instance().userId()
+                                 );
+                             if (result.success) {
+                                 myNotesPage.setNotes(result.notes);
+                             } else {
+                                 myNotesPage.clearNotes();
+                                 myNotesPage.showError(result.message);
+                             }
                              myNotesPage.show();
                          } else {
                              mainWindow.show();
@@ -157,7 +200,8 @@ int main(int argc, char *argv[])
                          draft.category = category;
                          draft.visibility = visibility;
 
-                         if (currentUserId <= 0) {
+                         if (!SessionManager::instance().isLoggedIn() ||
+                             SessionManager::instance().userId() <= 0) {
                              noteEntryPage.showSaveFailure(
                                  "You must be logged in to save notes.");
                              return;
@@ -165,7 +209,7 @@ int main(int argc, char *argv[])
 
                          NoteSaveResult result = NoteService::saveNewNote(
                              DatabaseManager::database(),
-                             currentUserId,
+                             SessionManager::instance().userId(),
                              draft
                              );
 

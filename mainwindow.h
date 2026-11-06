@@ -19,6 +19,7 @@ signals:
     void profileRequested();
     void createNoteRequested();
     void myNotesRequested();
+    void logoutRequested();
 
 private:
     Ui::MainWindow *ui;

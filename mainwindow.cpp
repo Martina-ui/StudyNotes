@@ -17,6 +17,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->myNotesButton, &QPushButton::clicked,
             this, &MainWindow::myNotesRequested);
+
+    connect(ui->logoutButton, &QPushButton::clicked,
+            this, &MainWindow::logoutRequested);
 }
 
 MainWindow::~MainWindow()
