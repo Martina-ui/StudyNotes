@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Configuration management placeholder
         run: echo "StudyNotes CI workflow will be configured as development progresses."
