@@ -14,12 +14,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+    void setAdminVisible(bool visible);
 
 signals:
     void profileRequested();
     void createNoteRequested();
     void myNotesRequested();
     void publicNotesRequested();
+    void adminPanelRequested();
     void logoutRequested();
 
 private:

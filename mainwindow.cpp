@@ -4,8 +4,7 @@
 #include <QPushButton>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -21,11 +20,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->publicNotesButton, &QPushButton::clicked,
             this, &MainWindow::publicNotesRequested);
 
+    connect(ui->adminPanelButton, &QPushButton::clicked,
+            this, &MainWindow::adminPanelRequested);
+
     connect(ui->logoutButton, &QPushButton::clicked,
             this, &MainWindow::logoutRequested);
+
+    setAdminVisible(false);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::setAdminVisible(bool visible)
+{
+    ui->adminPanelButton->setVisible(visible);
 }

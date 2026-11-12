@@ -9,6 +9,8 @@
 #include "noteservice.h"
 #include "sessionmanager.h"
 #include "publicnotespage.h"
+#include "adminpanelpage.h"
+#include "adminservice.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -39,6 +41,7 @@ int main(int argc, char *argv[])
     NoteEntryPage noteEntryPage;
     MyNotesPage myNotesPage;
     PublicNotesPage publicNotesPage;
+    AdminPanelPage adminPanelPage;
     MainWindow mainWindow;
     AccountManager accountManager;
 
@@ -48,10 +51,37 @@ int main(int argc, char *argv[])
                      &mainWindow,
                      [&](int userId, const QString &username, const QString &role) {
                          profilePage.setUserInfo(username, role);
+                         bool authorizedAdmin = AdminService::isAuthorizedAdmin(DatabaseManager::database(), userId);
+                         mainWindow.setAdminVisible(authorizedAdmin);
                          qInfo() << "Authenticated user:"
                                  << username
                                  << "ID:" << userId
                                  << "Role:" << role;
+                     });
+
+    QObject::connect(&mainWindow, &MainWindow::adminPanelRequested,
+                     &adminPanelPage, [&]() {
+                         int currentUserId = SessionManager::instance().userId();
+                         AdminNotesResult result = AdminService::loadPublicNotes(
+                             DatabaseManager::database(),
+                             currentUserId
+                             );
+                         if (!result.success) {
+                             adminPanelPage.clearNotes();
+                             mainWindow.setAdminVisible(false);
+                             qWarning() << "Admin Panel access denied:" << result.message;
+                             return;
+                         }
+                         adminPanelPage.setNotes(result.notes);
+                         mainWindow.hide();
+                         adminPanelPage.show();
+                     });
+
+    QObject::connect(&adminPanelPage, &AdminPanelPage::backRequested,
+                     &mainWindow, [&]() {
+                         adminPanelPage.hide();
+                         adminPanelPage.clearNotes();
+                         mainWindow.show();
                      });
 
     QObject::connect(&loginPage, &LoginPage::registrationRequested,
@@ -88,6 +118,9 @@ int main(int argc, char *argv[])
                          myNotesPage.clearNotes();
                          publicNotesPage.hide();
                          publicNotesPage.clearNotes();
+                         adminPanelPage.hide();
+                         adminPanelPage.clearNotes();
+                         mainWindow.setAdminVisible(false);
                          noteOpenedFromMyNotes = false;
                          loginPage.show();
                      });
@@ -222,26 +255,22 @@ int main(int argc, char *argv[])
                          const QString &content,
                          const QString &category,
                          const QString &visibility) {
-
                          NoteDraft draft;
                          draft.title = title;
                          draft.content = content;
                          draft.category = category;
                          draft.visibility = visibility;
-
                          if (!SessionManager::instance().isLoggedIn() ||
                              SessionManager::instance().userId() <= 0) {
                              noteEntryPage.showSaveFailure(
                                  "You must be logged in to save notes.");
                              return;
                          }
-
                          NoteSaveResult result = NoteService::saveNewNote(
                              DatabaseManager::database(),
                              SessionManager::instance().userId(),
                              draft
                              );
-
                          if (result.success) {
                              noteEntryPage.showSaveSuccess();
                              qInfo() << "Note saved successfully. ID:" << result.noteId;
@@ -250,8 +279,6 @@ int main(int argc, char *argv[])
                              qWarning() << "Unable to save note:" << result.message;
                          }
                      });
-
     loginPage.show();
-
     return app.exec();
 }
