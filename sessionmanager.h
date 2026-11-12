@@ -22,6 +22,10 @@ public:
         return m_isLoggedIn;
     }
 
+    bool isAdmin() const {
+        return m_isLoggedIn && m_userId > 0 && m_role == "Admin";
+    }
+
     void startSession(int id, const QString &userRole) {
         m_userId = id;
         m_role = userRole;

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AdminPanelPage</class>
+ <widget class="QWidget" name="AdminPanelPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>950</width>
+    <height>650</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>StudyNotes - Admin Panel</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#AdminPanelPage { background-color: #f4f7fb; color: #17365d; }
+QLabel { color: #17365d; }
+QLabel#headingLabel { font-size: 26px; font-weight: bold; }
+QLabel#subtitleLabel { color: #60758b; font-size: 13px; }
+QLabel#noteTitleValue { font-size: 18px; font-weight: bold; }
+QLabel#emptyLabel { color: #60758b; font-size: 13px; }
+QLabel#statusLabel { color: #c0392b; }
+QListWidget, QTextEdit { background: white; color: #17365d; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 13px; selection-background-color: #dbeafe; selection-color: #17365d; }
+QPushButton { background-color: #e2e8f0; color: #17365d; border: none; border-radius: 6px; padding: 10px 16px; font-weight: bold; }
+QPushButton:hover { background-color: #cbd5e1; }
+QPushButton#deleteButton { background-color: #c0392b; color: white; }
+QPushButton#deleteButton:hover { background-color: #a93226; }
+QPushButton#deleteButton:disabled { background-color: #e2e8f0; color: #94a3b8; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>12</number>
+   </property>
+   <property name="leftMargin">
+    <number>32</number>
+   </property>
+   <property name="topMargin">
+    <number>28</number>
+   </property>
+   <property name="rightMargin">
+    <number>32</number>
+   </property>
+   <property name="bottomMargin">
+    <number>28</number>
+   </property>
+   <item>
+    <widget class="QLabel" name="headingLabel">
+     <property name="text">
+      <string>Admin Panel</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="subtitleLabel">
+     <property name="text">
+      <string>Review public notes and manage shared content.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="notesLayout">
+     <property name="spacing">
+      <number>16</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="listLayout">
+       <item>
+        <widget class="QLabel" name="listHeadingLabel">
+         <property name="text">
+          <string>Public Notes</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="notesListWidget">
+         <property name="minimumSize">
+          <size>
+           <width>270</width>
+           <height>350</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="emptyLabel">
+         <property name="text">
+          <string>No public notes are available for moderation.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="detailsLayout">
+       <item>
+        <widget class="QLabel" name="detailsHeadingLabel">
+         <property name="text">
+          <string>Note Details</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="noteTitleValue">
+         <property name="text">
+          <string>Select a public note to review</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="categoryValue">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="visibilityValue">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="contentTextEdit">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="placeholderText">
+          <string>Select a public note to review its content.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="deleteButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Delete Note</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="bottomButtonsLayout">
+     <item>
+      <widget class="QPushButton" name="backButton">
+       <property name="text">
+        <string>Back to Home</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
