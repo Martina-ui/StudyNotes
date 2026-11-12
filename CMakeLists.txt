@@ -53,15 +53,19 @@ set(PROJECT_SOURCES
     publicnotespage.cpp
     publicnotespage.h
     publicnotespage.ui
+
+    adminservice.cpp
+    adminservice.h
+
+    adminpanelpage.h
+    adminpanelpage.cpp
+    adminpanelpage.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(StudyNotesUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        adminservice.cpp
-        adminservice.h
-        adminpanelpage.h adminpanelpage.cpp adminpanelpage.ui #I moved all the newly created files into the project sources section
     )
 else()
     if(ANDROID)
