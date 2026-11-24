@@ -21,6 +21,11 @@ public:
     void showSaveSuccess();
     void showSaveFailure(const QString &message);
     void clearFields();
+    void setNoteFields(const QString &title,
+                       const QString &content,
+                       const QString &category,
+                       const QString &visibility);
+    void setEditMode(bool editing);
 
 signals:
     void noteCreationRequested(const QString &title,
@@ -41,3 +46,4 @@ private:
 };
 
 #endif // NOTEENTRYPAGE_H
+
