@@ -9,14 +9,22 @@
 
 #include <sodium.h>
 
-AccountManager::AccountManager(QObject *parent)
-    : QObject(parent)
+AccountManager::AccountManager(const QString &connectionName, QObject *parent)
+    : QObject(parent), m_connectionName(connectionName) //new default empty string will be filled if ive got a test db
 {
+}
+
+QSqlDatabase AccountManager::resolveDatabase() const //function that swaps in test db if tests are goin
+{
+    if (!m_connectionName.isEmpty()) {
+        return QSqlDatabase::database(m_connectionName);
+    }
+    return DatabaseManager::database();
 }
 
 void AccountManager::handleLoginRequest(const QString &username, const QString &password)
 {
-    QSqlDatabase db = DatabaseManager::database();
+    QSqlDatabase db = resolveDatabase();
 
     if (!db.isValid() || !db.isOpen()) {
         qWarning() << "AccountManager: Database connection is unavailable.";
@@ -78,7 +86,7 @@ void AccountManager::handleLoginRequest(const QString &username, const QString &
 
 void AccountManager::handleRegistrationRequest(const QString &username, const QString &password)
 {
-    QSqlDatabase db = DatabaseManager::database();
+    QSqlDatabase db = resolveDatabase();
 
     if (!db.isValid() || !db.isOpen()) {
         qWarning() << "AccountManager: Database connection is unavailable.";
@@ -141,7 +149,8 @@ void AccountManager::handleRegistrationRequest(const QString &username, const QS
         qWarning() << "AccountManager: Registration failed:"
                    << query.lastError().text();
 
-        if (query.lastError().nativeErrorCode() == "23505") {
+        const QString errCode = query.lastError().nativeErrorCode(); //errCode updated to be multiple numbers (Postgresql and Sqlite)
+        if (errCode == "23505" || errCode == "2067" || errCode == "19") {
             emit registrationFailure("This username is already taken.");
         } else {
             emit registrationFailure("Unable to register. Please try again.");
