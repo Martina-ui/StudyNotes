@@ -198,3 +198,82 @@ NoteLoadResult NoteService::loadPublicNotes(const QSqlDatabase &database)
     result.success = true;
     return result;
 }
+
+NoteSaveResult NoteService::updateNote(const QSqlDatabase &database,
+                                       int currentUserId,
+                                       int noteId,
+                                       const NoteDraft &draft)
+{
+    NoteSaveResult result = validate(draft, currentUserId);
+
+    if (!result.success) {
+        return result;
+    }
+
+    if (!database.isValid() || !database.isOpen()) {
+        return {false, "Database connection unavailable.", -1};
+    }
+
+    QSqlQuery query(database);
+
+    if (!query.prepare(
+        "UPDATE notes SET title = :title, content = :content, "
+        "category = :category, visibility = :visibility, "
+        "updated_at = CURRENT_TIMESTAMP "
+        "WHERE note_id = :note_id AND user_id = :user_id"
+    )) {
+        return {false, "Unable to prepare update.", -1};
+    }
+
+    query.bindValue(":title", draft.title.trimmed());
+    query.bindValue(":content", draft.content);
+    query.bindValue(":category", draft.category);
+    query.bindValue(":visibility", draft.visibility);
+    query.bindValue(":note_id", noteId);
+    query.bindValue(":user_id", currentUserId);
+
+    if (!query.exec()) {
+        return {false, "Unable to update note.", -1};
+    }
+
+    if (query.numRowsAffected() != 1) {
+        return {false, "Note not found or access denied.", -1};
+    }
+
+    return {true, "Note updated successfully.", noteId};
+}
+
+NoteSaveResult NoteService::deleteNote(const QSqlDatabase &database,
+                                       int currentUserId,
+                                       int noteId)
+{
+    if (currentUserId <= 0) {
+        return {false, "You must be logged in.", -1};
+    }
+
+    if (!database.isValid() || !database.isOpen()) {
+        return {false, "Database connection unavailable.", -1};
+    }
+
+    QSqlQuery query(database);
+
+    if (!query.prepare(
+        "DELETE FROM notes "
+        "WHERE note_id = :note_id AND user_id = :user_id"
+    )) {
+        return {false, "Unable to prepare deletion.", -1};
+    }
+
+    query.bindValue(":note_id", noteId);
+    query.bindValue(":user_id", currentUserId);
+
+    if (!query.exec()) {
+        return {false, "Unable to delete note.", -1};
+    }
+
+    if (query.numRowsAffected() != 1) {
+        return {false, "Note not found or access denied.", -1};
+    }
+
+    return {true, "Note deleted successfully.", noteId};
+}

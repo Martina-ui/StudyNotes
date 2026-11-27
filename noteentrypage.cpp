@@ -91,3 +91,23 @@ void NoteEntryPage::showMessage(const QString &message, bool success)
         success ? "color: #16803c;" : "color: #c0392b;"
         );
 }
+
+void NoteEntryPage::setNoteFields(const QString &title,
+                                  const QString &content,
+                                  const QString &category,
+                                  const QString &visibility)
+{
+    ui->titleLineEdit->setText(title);
+    ui->contentTextEdit->setPlainText(content);
+    ui->categoryComboBox->setCurrentText(category);
+    ui->visibilityComboBox->setCurrentText(visibility);
+    ui->statusLabel->clear();
+}
+
+void NoteEntryPage::setEditMode(bool editing)
+{
+    ui->createNoteButton->setText(
+        editing ? "Save Changes" : "Create Note"
+    );
+    ui->statusLabel->clear();
+}

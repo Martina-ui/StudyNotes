@@ -14,6 +14,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QMessageBox>
 #include <sodium.h>
 
 int main(int argc, char *argv[])
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
     AccountManager accountManager;
 
     bool noteOpenedFromMyNotes = false;
+    int editingNoteId = -1;
 
     QObject::connect(&accountManager, &AccountManager::userAuthenticated,
                      &mainWindow,
@@ -115,6 +117,8 @@ int main(int argc, char *argv[])
                          profilePage.hide();
                          myNotesPage.hide();
                          noteEntryPage.hide();
+                         editingNoteId = -1;
+                         noteEntryPage.setEditMode(false);
                          myNotesPage.clearNotes();
                          publicNotesPage.hide();
                          publicNotesPage.clearNotes();
@@ -225,9 +229,83 @@ int main(int argc, char *argv[])
                          noteEntryPage.show();
                      });
 
+    QObject::connect(&myNotesPage, &MyNotesPage::editNoteRequested,
+                     &noteEntryPage, [&](int noteId) {
+        if (!SessionManager::instance().isLoggedIn()) {
+            return;
+        }
+
+        NoteLoadResult result = NoteService::loadUserNotes(
+            DatabaseManager::database(),
+            SessionManager::instance().userId()
+        );
+
+        if (!result.success) {
+            myNotesPage.showError(result.message);
+            return;
+        }
+
+        for (const NoteSummary &note : result.notes) {
+            if (note.noteId == noteId) {
+                editingNoteId = noteId;
+                noteOpenedFromMyNotes = true;
+
+                noteEntryPage.setNoteFields(
+                    note.title, note.content,
+                    note.category, note.visibility
+                );
+
+                noteEntryPage.setEditMode(true);
+                myNotesPage.hide();
+                noteEntryPage.show();
+                return;
+            }
+        }
+
+        myNotesPage.showError("Note not found or access denied.");
+    });
+
+    QObject::connect(&myNotesPage, &MyNotesPage::deleteNoteRequested,
+                     &myNotesPage, [&](int noteId) {
+        if (!SessionManager::instance().isLoggedIn()) {
+            return;
+        }
+
+        if (QMessageBox::question(&myNotesPage,
+                "Delete Note", "Are you sure you want to delete this note?")
+                != QMessageBox::Yes) {
+            return;
+        }
+
+        NoteSaveResult result = NoteService::deleteNote(
+            DatabaseManager::database(),
+            SessionManager::instance().userId(),
+            noteId
+        );
+
+        if (!result.success) {
+            myNotesPage.showError(result.message);
+            return;
+        }
+
+        NoteLoadResult notes = NoteService::loadUserNotes(
+            DatabaseManager::database(),
+            SessionManager::instance().userId()
+        );
+
+        if (notes.success) {
+            myNotesPage.setNotes(notes.notes);
+        } else {
+            myNotesPage.clearNotes();
+            myNotesPage.showError(notes.message);
+        }
+    });
+
     QObject::connect(&noteEntryPage, &NoteEntryPage::cancelRequested,
                      &mainWindow, [&]() {
                          noteEntryPage.hide();
+                         editingNoteId = -1;
+                         noteEntryPage.setEditMode(false);
                          if (!SessionManager::instance().isLoggedIn()) {
                              loginPage.show();
                              return;
@@ -266,13 +344,44 @@ int main(int argc, char *argv[])
                                  "You must be logged in to save notes.");
                              return;
                          }
-                         NoteSaveResult result = NoteService::saveNewNote(
-                             DatabaseManager::database(),
-                             SessionManager::instance().userId(),
-                             draft
+                         NoteSaveResult result;
+
+                         if (editingNoteId > 0) {
+                             result = NoteService::updateNote(
+                                 DatabaseManager::database(),
+                                 SessionManager::instance().userId(),
+                                 editingNoteId,
+                                 draft
                              );
+                         } else {
+                             result = NoteService::saveNewNote(
+                                 DatabaseManager::database(),
+                                 SessionManager::instance().userId(),
+                                 draft
+                             );
+                         }
                          if (result.success) {
-                             noteEntryPage.showSaveSuccess();
+                             if (editingNoteId > 0) {
+                                 editingNoteId = -1;
+                                 noteEntryPage.setEditMode(false);
+                                 noteEntryPage.clearFields();
+                                 noteEntryPage.hide();
+                                 NoteLoadResult notes = NoteService::loadUserNotes(
+                                     DatabaseManager::database(),
+                                     SessionManager::instance().userId()
+                                 );
+
+                                 if (notes.success) {
+                                     myNotesPage.setNotes(notes.notes);
+                                 } else {
+                                     myNotesPage.clearNotes();
+                                     myNotesPage.showError(notes.message);
+                                 }
+
+                                 myNotesPage.show();
+                             } else {
+                                 noteEntryPage.showSaveSuccess();
+                             }
                              qInfo() << "Note saved successfully. ID:" << result.noteId;
                          } else {
                              noteEntryPage.showSaveFailure(result.message);
