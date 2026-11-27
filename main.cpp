@@ -366,9 +366,6 @@ int main(int argc, char *argv[])
                                  noteEntryPage.setEditMode(false);
                                  noteEntryPage.clearFields();
                                  noteEntryPage.hide();
-                         editingNoteId = -1;
-                         noteEntryPage.setEditMode(false);
-
                                  NoteLoadResult notes = NoteService::loadUserNotes(
                                      DatabaseManager::database(),
                                      SessionManager::instance().userId()
@@ -394,9 +391,3 @@ int main(int argc, char *argv[])
     loginPage.show();
     return app.exec();
 }
-
-
-
-
-
-
