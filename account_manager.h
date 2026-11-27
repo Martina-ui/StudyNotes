@@ -10,7 +10,7 @@ class AccountManager : public QObject
     Q_OBJECT
 
 public:
-    explicit AccountManager(const QString &connectionName = QString(), QObject *parent = nullptr); //new variable
+    explicit AccountManager(const QString &connectionName = QString(), QObject *parent = nullptr);
 
 public slots:
     void handleLoginRequest(const QString &username, const QString &password);
@@ -26,7 +26,7 @@ signals:
     void userAuthenticated(int userId, const QString &username, const QString &role);
 
 private:
-    QSqlDatabase resolveDatabase() const; //I need this for the tester
+    QSqlDatabase resolveDatabase() const;
     QString m_connectionName;
 };
 

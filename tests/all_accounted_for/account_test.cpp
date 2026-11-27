@@ -3,6 +3,7 @@
 #include <adminservice.h>
 
 #include <QApplication>
+#include <QByteArray>
 #include <QDebug>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -11,41 +12,35 @@
 #include <QVariant>
 #include <sodium.h>
 
-//again, basic structure of Lewis's test code, fitted to my stuff
-namespace{
+namespace {
 
-//if it aint broke. this pigeon is gonna have a slick pair of shades
-struct ClipboardPigeon {
-    int criminalBreadcrumbCount = 0;
-
-    bool verify(bool passed, const QString &normalDescription)
+struct TestRunner {
+    int failureCount = 0;
+    bool verify(bool passed, const QString &description)
     {
         if (passed) {
-            qInfo().noquote() << "PASS:" << normalDescription;
+            qInfo().noquote() << "PASS:" << description;
         } else {
-            qCritical().noquote() << "FAIL:" << normalDescription;
-            ++criminalBreadcrumbCount;
+            qCritical().noquote() << "FAIL:" << description;
+            ++failureCount;
         }
         return passed;
     }
 };
 
-struct SignalTracker { //this struct is new. tests are validated if the right signal is sent. this struct catches every signal with lambdas
+//tracks signals emitted by AccountManager
+struct SignalTracker {
     bool regSuccess = false;
     bool regFailed = false;
     QString lastRegError;
-
     bool loginSuccess = false;
     bool loginFailed = false;
     QString lastLoginError;
-
     bool userAuthEmitted = false;
     int authUserId = -1;
     QString authUsername;
     QString authRole;
-
     bool logoutSuccess = false;
-
     void reset()
     {
         regSuccess = false;
@@ -77,62 +72,39 @@ struct SignalTracker { //this struct is new. tests are validated if the right si
             loginFailed = true;
             lastLoginError = msg;
         });
-        QObject::connect(&manager, &AccountManager::userAuthenticated,
-                         [&](int userId, const QString &username, const QString &role) {
-                             userAuthEmitted = true;
-                             authUserId = userId;
-                             authUsername = username;
-                             authRole = role;
-                         });
+        QObject::connect(&manager, &AccountManager::userAuthenticated, [&](int userId, const QString &username, const QString &role) {
+            userAuthEmitted = true;
+            authUserId = userId;
+            authUsername = username;
+            authRole = role;
+        });
         QObject::connect(&manager, &AccountManager::logoutSuccess, [&]() {
             logoutSuccess = true;
         });
     }
 };
 
-//SIMULATING TEST DATA
-// instead of making a mini notes db table, i make a mini users table (that emulates murat's schema)
-bool assembleTheTemporaryFurniture(QSqlDatabase &database, ClipboardPigeon &failboat) //make sure object names are distinct but not too close together ugh
+//creates temporary tables that simulate the PostgreSQL schema
+bool createTestTables(QSqlDatabase &database, TestRunner &testRunner)
 {
-    // These are test-only tables, NOT a replacement for Murat's PostgreSQL.
-    // only simulating a user test table. my current favorite dragon is the bakunawa
-    QSqlQuery screwdriverGoblin(database);
-    const bool foreignKeysEnabled = failboat.verify(
-        screwdriverGoblin.exec("PRAGMA foreign_keys = ON"),
-        "Enable foreign key checks");
-    const bool usersCreated = failboat.verify(
-        screwdriverGoblin.exec(
-            "CREATE TABLE IF NOT EXISTS users ("
-            "user_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "username VARCHAR(50) NOT NULL UNIQUE, "
-            "password_hash TEXT NOT NULL, "
-            "role VARCHAR(10) NOT NULL DEFAULT 'Student' "
-            "CHECK (role IN ('Student', 'Admin')), "
-            "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
-        "Create temporary users table");
-    const bool notesCreated = failboat.verify(
-        screwdriverGoblin.exec(
-            "CREATE TABLE notes ("
-            "note_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "user_id INTEGER NOT NULL REFERENCES users(user_id), "
-            "title VARCHAR(200) NOT NULL, "
-            "content TEXT NOT NULL, "
-            "category VARCHAR(100), "
-            "visibility VARCHAR(10) NOT NULL "
-            "CHECK (visibility IN ('Public', 'Private')))"),
-        "Create temporary notes table");
+    QSqlQuery query(database);
+    const bool foreignKeysEnabled = testRunner.verify(query.exec("PRAGMA foreign_keys = ON"), "Enable foreign key checks");
+    const bool usersCreated = testRunner.verify(query.exec("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR(50) NOT NULL UNIQUE, password_hash TEXT NOT NULL, role VARCHAR(10) NOT NULL DEFAULT 'Student' CHECK (role IN ('Student', 'Admin')), created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)"), "Create temporary users table");
+    const bool notesCreated = testRunner.verify(query.exec("CREATE TABLE notes (note_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(user_id), title VARCHAR(200) NOT NULL, content TEXT NOT NULL, category VARCHAR(100), visibility VARCHAR(10) NOT NULL CHECK (visibility IN ('Public', 'Private')))"), "Create temporary notes table");
     return foreignKeysEnabled && usersCreated && notesCreated;
 }
 
-int countUsers(QSqlDatabase &database) {
+//returns the number of users stored in the test database
+int countUsers(QSqlDatabase &database)
+{
     QSqlQuery query(database);
-    if(!query.exec("SELECT COUNT (*) FROM users") || !query.next()) {
+    if (!query.exec("SELECT COUNT(*) FROM users") || !query.next()) {
         return -1;
     }
-    return query.value(0).toInt(); //this line stops a warining during compile
+    return query.value(0).toInt();
 }
 
-void runInvalidRegistrationTests(AccountManager &manager, SignalTracker &tracker, QSqlDatabase &db, ClipboardPigeon &pigeon)
+void runInvalidRegistrationTests(AccountManager &manager, SignalTracker &tracker, QSqlDatabase &db, TestRunner &testRunner)
 {
     struct BadRegistrationCase {
         const char *description;
@@ -140,206 +112,201 @@ void runInvalidRegistrationTests(AccountManager &manager, SignalTracker &tracker
         QString password;
         QString expectedError;
     };
-
     const BadRegistrationCase cases[] = {
         {"Reject empty username", "", "ValidPass123", "Username cannot be empty."},
         {"Reject whitespace-only username", "    ", "ValidPass123", "Username cannot be empty."},
-        {"Reject username longer than 15 characters", QString(16, 'A'), "ValidPass123",
-         "Username must be 15 characters or less."},
+        {"Reject username longer than 15 characters", QString(16, 'A'), "ValidPass123", "Username must be 15 characters or less."},
         {"Reject empty password", "validuser", "", "Password cannot be empty."},
-        {"Reject password shorter than 8 characters", "validuser", "short7",
-         "Password must be at least 8 characters long."}
+        {"Reject password shorter than 8 characters", "validuser", "short7", "Password must be at least 8 characters long."}
     };
-
     for (const BadRegistrationCase &testCase : cases) {
         tracker.reset();
         manager.handleRegistrationRequest(testCase.username, testCase.password);
-        pigeon.verify(
-            !tracker.regSuccess && tracker.regFailed &&
-                tracker.lastRegError == testCase.expectedError &&
-                countUsers(db) == 0,
-            QString::fromUtf8(testCase.description));
+        testRunner.verify(!tracker.regSuccess && tracker.regFailed && tracker.lastRegError == testCase.expectedError && countUsers(db) == 0, QString::fromUtf8(testCase.description));
     }
 }
 
-void runInvalidLoginTests(AccountManager &manager, SignalTracker &tracker, ClipboardPigeon &pigeon)
-{
-    // 1. No credentials
-    tracker.reset();
-    manager.handleLoginRequest("", "");
-    pigeon.verify(!tracker.loginSuccess && tracker.loginFailed &&
-                      tracker.lastLoginError == "Please enter your username and password.",
-                  "Reject login with empty credentials");
-
-    // 2. User not found
-    tracker.reset();
-    manager.handleLoginRequest("ghost_student", "ValidPass123");
-    pigeon.verify(!tracker.loginSuccess && tracker.loginFailed &&
-                      tracker.lastLoginError == "Incorrect username or password.",
-                  "Reject login for nonexistent username");
-
-    // 3. Wrong password
-    tracker.reset();
-    manager.handleLoginRequest("tawusi_melek", "WrongPassword!");
-    pigeon.verify(!tracker.loginSuccess && tracker.loginFailed &&
-                      tracker.lastLoginError == "Incorrect username or password.",
-                  "Reject login with incorrect password");
-}
-
-void runSessionAndAuthorizationTests(AccountManager &manager, SignalTracker &tracker, QSqlDatabase &db, ClipboardPigeon &pigeon)
+void runInvalidLoginTests(AccountManager &manager, SignalTracker &tracker, TestRunner &testRunner)
 {
     SessionManager &session = SessionManager::instance();
+    //login with empty credentials
+    tracker.reset();
+    manager.handleLoginRequest("", "");
+    testRunner.verify(!tracker.loginSuccess && tracker.loginFailed && !tracker.userAuthEmitted && !session.isLoggedIn() && tracker.lastLoginError == "Please enter your username and password.", "Reject login with empty credentials");
 
-    // 8. Authenticated session behavior (Student login -> verify session fields -> logout -> verify cleared)
+    //login with a nonexistent username
+    tracker.reset();
+    manager.handleLoginRequest("ghost_student", "ValidPass123");
+    testRunner.verify(!tracker.loginSuccess && tracker.loginFailed && !tracker.userAuthEmitted && !session.isLoggedIn() && tracker.lastLoginError == "Incorrect username or password.", "Reject login for nonexistent username");
+
+    //login with an incorrect password
+    tracker.reset();
+    manager.handleLoginRequest("tawusi_melek", "WrongPassword!");
+    testRunner.verify(!tracker.loginSuccess && tracker.loginFailed && !tracker.userAuthEmitted && !session.isLoggedIn() && tracker.lastLoginError == "Incorrect username or password.", "Reject login with incorrect password");
+}
+
+void runSessionAndAuthorizationTests(AccountManager &manager, SignalTracker &tracker, QSqlDatabase &db, TestRunner &testRunner)
+{
+    SessionManager &session = SessionManager::instance();
+    //verify student session information after login
     tracker.reset();
     manager.handleLoginRequest("tawusi_melek", "Pc0ck_Ange1");
     const int studentId = session.userId();
-    pigeon.verify(
-        session.isLoggedIn() && studentId > 0 &&
-            session.role() == "Student" && !session.isAdmin(),
-        "SessionManager stores Student userId, role, and non-admin status after login");
+    if (!testRunner.verify(tracker.loginSuccess && session.isLoggedIn() && studentId > 0 && session.role() == "Student" && !session.isAdmin(), "SessionManager stores Student session information")) {
+        session.clearSession();
+        return;
+    }
 
-    // 9. Unauthorized admin access (Student attempting AdminService actions + spoofed session ID)
-    pigeon.verify(
-        !AdminService::isAuthorizedAdmin(db, studentId),
-        "Deny Admin authorization check for logged-in Student");
-
+    //verify that students cannot access admin services
+    testRunner.verify(!AdminService::isAuthorizedAdmin(db, studentId), "Deny Admin authorization check for logged-in Student");
     const AdminNotesResult studentLoadAttempt = AdminService::loadPublicNotes(db, studentId);
-    pigeon.verify(
-        !studentLoadAttempt.success &&
-            studentLoadAttempt.message == "Access denied. Admin privileges are required.",
-        "Block Student from loading Admin moderation notes");
+    testRunner.verify(!studentLoadAttempt.success && studentLoadAttempt.message == "Access denied. Admin privileges are required.", "Block Student from loading Admin moderation notes");
 
-    // Create an Admin user and a Public note in the test DB to test valid Admin access
+    //generate a valid password hash for the test admin account
+    char passwordHash[crypto_pwhash_STRBYTES];
+    const QByteArray adminPassword = "AdminPass123";
+    if (!testRunner.verify(crypto_pwhash_str(passwordHash, adminPassword.constData(), adminPassword.size(), crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE) == 0, "Generate test Admin password hash")) {
+        session.clearSession();
+        return;
+    }
+
+    //create an admin account in the test database
     QSqlQuery setupQuery(db);
-    setupQuery.exec(
-        "INSERT INTO users (username, password_hash, role) "
-        "VALUES ('Simurgh_fr_fr', 'placeholder_hash', 'Admin')");
+    setupQuery.prepare("INSERT INTO users (username, password_hash, role) VALUES (:username, :password, 'Admin')");
+    setupQuery.bindValue(":username", "test_admin");
+    setupQuery.bindValue(":password", QString::fromUtf8(passwordHash));
+    if (!testRunner.verify(setupQuery.exec(), "Create test Admin account")) {
+        session.clearSession();
+        return;
+    }
     const int adminId = setupQuery.lastInsertId().toInt();
+    if (!testRunner.verify(adminId > 0, "Retrieve test Admin ID")) {
+        session.clearSession();
+        return;
+    }
 
-    setupQuery.prepare(
-        "INSERT INTO notes (user_id, title, content, category, visibility) "
-        "VALUES (:uid, 'Public Study Guide', 'Shared notes', 'CS', 'Public')");
+    //create a public note owned by the student
+    setupQuery.prepare("INSERT INTO notes (user_id, title, content, category, visibility) VALUES (:uid, 'Public Study Guide', 'Shared notes', 'Computer Science', 'Public')");
     setupQuery.bindValue(":uid", studentId);
-    setupQuery.exec();
+    if (!testRunner.verify(setupQuery.exec(), "Create public test note")) {
+        session.clearSession();
+        return;
+    }
 
-    // student cannot spoof admin's userId into AdminService
-    pigeon.verify(
-        !AdminService::isAuthorizedAdmin(db, adminId),
-        "Block Student session from passing Admin userId to AdminService");
+    //create a private note owned by the student
+    setupQuery.prepare("INSERT INTO notes (user_id, title, content, category, visibility) VALUES (:uid, 'Private Study Guide', 'Private notes', 'Computer Science', 'Private')");
+    setupQuery.bindValue(":uid", studentId);
+    if (!testRunner.verify(setupQuery.exec(), "Create private test note")) {
+        session.clearSession();
+        return;
+    }
 
+    //verify that students cannot impersonate an admin
+    testRunner.verify(!AdminService::isAuthorizedAdmin(db, adminId), "Block Student session from passing Admin userId");
+
+    //verify that logout clears the student session
+    tracker.reset();
     manager.handleLogoutRequest();
-    pigeon.verify(
-        !session.isLoggedIn() && session.userId() == -1 &&
-            session.role().isEmpty() && !session.isAdmin(),
-        "SessionManager resets userId, role, and flags on logout");
+    testRunner.verify(tracker.logoutSuccess && !session.isLoggedIn() && session.userId() == -1 && session.role().isEmpty() && !session.isAdmin(), "SessionManager resets userId, role, and flags on logout");
 
-    // 10. Student/Admin authorization behavior (valid admin session + db verification)
-    session.startSession(adminId, "Admin");
-    pigeon.verify(
-        session.isLoggedIn() && session.isAdmin() &&
-            AdminService::isAuthorizedAdmin(db, adminId),
-        "Authorize valid Admin user when session and database role match");
+    //verify that admin services cannot be accessed after logout
+    testRunner.verify(!AdminService::isAuthorizedAdmin(db, adminId), "Deny Admin authorization without an active session");
+    const AdminNotesResult loggedOutAttempt = AdminService::loadPublicNotes(db, adminId);
+    testRunner.verify(!loggedOutAttempt.success, "Block access to Admin moderation notes after logout");
 
+    //authenticate the admin through AccountManager
+    tracker.reset();
+    manager.handleLoginRequest("test_admin", "AdminPass123");
+    testRunner.verify(tracker.loginSuccess && !tracker.loginFailed && tracker.userAuthEmitted && tracker.authUserId == adminId && tracker.authUsername == "test_admin" && tracker.authRole == "Admin" && session.isLoggedIn() && session.userId() == adminId && session.isAdmin(), "Authenticate Admin and establish Admin session");
+
+    //verify admin authorization
+    testRunner.verify(AdminService::isAuthorizedAdmin(db, adminId), "Authorize valid Admin when session and database role match");
+
+    //verify that admin moderation only retrieves public notes
     const AdminNotesResult adminLoadAttempt = AdminService::loadPublicNotes(db, adminId);
-    pigeon.verify(
-        adminLoadAttempt.success && adminLoadAttempt.notes.size() == 1 &&
-            adminLoadAttempt.notes.first().title == "Public Study Guide",
-        "Allow authorized Admin to load public notes for moderation");
 
+    testRunner.verify(adminLoadAttempt.success && adminLoadAttempt.notes.size() == 1 && adminLoadAttempt.notes.first().title == "Public Study Guide", "Allow Admin to load public notes while excluding private notes");
+
+    //verify that logout clears the admin session
+    tracker.reset();
+    manager.handleLogoutRequest();
+    testRunner.verify(tracker.logoutSuccess && !session.isLoggedIn() && !session.isAdmin() && session.userId() == -1 && session.role().isEmpty(), "Log out Admin and clear session");
     session.clearSession();
 }
 
-} //namespace
+}
 
 int main(int argc, char *argv[])
 {
     QApplication application(argc, argv);
-    ClipboardPigeon clipboardPigeon;
-    if (!clipboardPigeon.verify(sodium_init() >= 0, "Initialize libsodium")) {
+    TestRunner testRunner;
+
+    //initialize libsodium for password hashing
+    if (!testRunner.verify(sodium_init() >= 0, "Initialize libsodium")) {
         return 1;
     }
 
-    QTemporaryDir secretGoblinLair;
-    if (!clipboardPigeon.verify(secretGoblinLair.isValid(), "Create temporary test folder")) {
+    //create a temporary directory for the test database
+    QTemporaryDir tempDirectory;
+    if (!testRunner.verify(tempDirectory.isValid(), "Create temporary test folder")) {
         return 1;
     }
-
-    constexpr const char *connectionName = "studynotes_account_smoke"; //why are they called smoke tests anyways?
+    constexpr const char *connectionName = "studynotes_account_smoke";
     {
-        QSqlDatabase pocketSizedDatabase =
-            QSqlDatabase::addDatabase("QSQLITE", connectionName);
-        pocketSizedDatabase.setDatabaseName(
-            secretGoblinLair.filePath("account_test.sqlite"));
-
-        if (!clipboardPigeon.verify(pocketSizedDatabase.open(),
-                                    "Open temporary test database")) {
-            qCritical().noquote() << pocketSizedDatabase.lastError().text();
-        } else if (assembleTheTemporaryFurniture(pocketSizedDatabase, clipboardPigeon)) {
-            AccountManager accountManager(connectionName);
+        QSqlDatabase testDatabase = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+        testDatabase.setDatabaseName(tempDirectory.filePath("account_test.sqlite"));
+        if (!testRunner.verify(testDatabase.open(), "Open temporary test database")) {
+            qCritical().noquote() << testDatabase.lastError().text();
+        } else if (createTestTables(testDatabase, testRunner)) {
             SignalTracker tracker;
+            AccountManager accountManager(connectionName);
             tracker.attach(accountManager);
+            SessionManager::instance().clearSession();
+            //1. invalid registration attempts
+            runInvalidRegistrationTests(accountManager, tracker, testDatabase, testRunner);
 
-            // 1. Invalid/incomplete registration
-            runInvalidRegistrationTests(accountManager, tracker, pocketSizedDatabase, clipboardPigeon);
-
-            // 2. Valid registration (also tests username trimming & default 'Student' role)
+            //2. valid registration with username trimming
             tracker.reset();
             accountManager.handleRegistrationRequest("  tawusi_melek  ", "Pc0ck_Ange1");
-            clipboardPigeon.verify(
-                tracker.regSuccess && !tracker.regFailed && countUsers(pocketSizedDatabase) == 1,
-                "Register valid new user and store in database");
+            testRunner.verify(tracker.regSuccess && !tracker.regFailed && countUsers(testDatabase) == 1, "Register valid new user and store in database");
 
-            // 3. Duplicate username rejection
+            //3. duplicate username rejection
             tracker.reset();
             accountManager.handleRegistrationRequest("tawusi_melek", "Yazidism101");
-            clipboardPigeon.verify(
-                !tracker.regSuccess && tracker.regFailed &&
-                    tracker.lastRegError == "This username is already taken." &&
-                    countUsers(pocketSizedDatabase) == 1,
-                "Reject duplicate username registration");
+            testRunner.verify(!tracker.regSuccess && tracker.regFailed && tracker.lastRegError == "This username is already taken." && countUsers(testDatabase) == 1, "Reject duplicate username registration");
 
-            // 4. Invalid login attempts
-            runInvalidLoginTests(accountManager, tracker, clipboardPigeon);
+            //4. invalid login attempts
+            runInvalidLoginTests(accountManager, tracker, testRunner);
 
-            // 5. Valid login
+            //5. valid login and session creation
             tracker.reset();
             accountManager.handleLoginRequest("  tawusi_melek ", "Pc0ck_Ange1");
-            clipboardPigeon.verify(
-                tracker.loginSuccess && !tracker.loginFailed &&
-                    tracker.userAuthEmitted &&
-                    tracker.authUserId > 0 &&
-                    tracker.authUsername == "tawusi_melek" &&
-                    tracker.authRole == "Student" &&
-                    SessionManager::instance().isLoggedIn(),
-                "Authenticate valid user, emit user details, and start session");
+            testRunner.verify(tracker.loginSuccess && !tracker.loginFailed && tracker.userAuthEmitted && tracker.authUserId > 0 && tracker.authUsername == "tawusi_melek" && tracker.authRole == "Student" && SessionManager::instance().isLoggedIn(), "Authenticate valid user, emit user details, and start session");
 
-            // 6. Logout
+            //6. logout from an active session
             tracker.reset();
             accountManager.handleLogoutRequest();
-            clipboardPigeon.verify(
-                tracker.logoutSuccess && !SessionManager::instance().isLoggedIn(),
-                "Log out active user and clear session");
+            testRunner.verify(tracker.logoutSuccess && !SessionManager::instance().isLoggedIn(), "Log out active user and clear session");
 
-            // 7. Protected functionality after logout (cannot log out again without active session)
+            //7. duplicate logout without an active session
             tracker.reset();
             accountManager.handleLogoutRequest();
-            clipboardPigeon.verify(
-                !tracker.logoutSuccess && !SessionManager::instance().isLoggedIn(),
-                "Ignore duplicate logout request when no active session exists");
+            testRunner.verify(!tracker.logoutSuccess && !SessionManager::instance().isLoggedIn(), "Ignore duplicate logout request when no active session exists");
 
-            // 8-10. Session and authorization tests
-            runSessionAndAuthorizationTests(accountManager,tracker,pocketSizedDatabase, clipboardPigeon);
+            //8. session management and authorization tests
+            runSessionAndAuthorizationTests(accountManager, tracker, testDatabase, testRunner);
         }
-        pocketSizedDatabase.close();
+
+        testDatabase.close();
     }
+
+    //remove the temporary database connection
     QSqlDatabase::removeDatabase(connectionName);
 
-    if (clipboardPigeon.criminalBreadcrumbCount == 0) {
+    if (testRunner.failureCount == 0) {
         qInfo().noquote() << "ALL ACCOUNT MANAGER SMOKE TESTS PASSED";
         return 0;
     }
-    qCritical().noquote() << "TESTS FAILED:" << clipboardPigeon.criminalBreadcrumbCount;
+    qCritical().noquote() << "TESTS FAILED:" << testRunner.failureCount;
     return 1;
-
-} //main
+}

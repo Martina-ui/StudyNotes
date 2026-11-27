@@ -1,17 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 project(StudyNotesAccountTester LANGUAGES CXX)
 
-set (CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# test build pulls heavily from Lewis's first test build, except remade for my subsystems.
-# building an independant testing room. not as whimsical as Lewis's, sorry.
-# the app keeps its own CMakeLists.txt
+#find the required Qt components
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Sql Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Sql Widgets)
 
-#gotta do all this for the hash
+#configure libsodium for the current operating system
 if(WIN32)
 
     set(SODIUM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/libsodium")
@@ -50,7 +48,7 @@ else()
 
 endif()
 
-# Only building what I need.
+#build the account and session test executable
 add_executable(AccountTestFiles
     ../../account_manager.cpp
     ../../account_manager.h
@@ -62,19 +60,20 @@ add_executable(AccountTestFiles
     account_test.cpp
 )
 
-# I don't know what all this setting up below the public header is for, but i will not touch it assuming it's necessary
+#include headers from the main project directory
 target_include_directories(AccountTestFiles PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../..
 )
 
+#link the required Qt components and libsodium
 target_link_libraries(AccountTestFiles PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Sql
-    Qt${QT_VERSION_MAJOR}::Widgets #only the notes file needs widgets, but its not my file, so im not changing anything in it
+    Qt${QT_VERSION_MAJOR}::Widgets
     sodium
 )
 
-# Copy libsodium-26.dll next to AccountTestFiles.exe on Windows so it runs without crashing -II
+#copy the libsodium DLL next to the test executable on Windows
 if(WIN32)
     add_custom_command(TARGET AccountTestFiles POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -82,3 +81,7 @@ if(WIN32)
             "$<TARGET_FILE_DIR:AccountTestFiles>"
     )
 endif()
+
+#register the automated account and session tests with CTest
+enable_testing()
+add_test(NAME AccountSessionTests COMMAND AccountTestFiles)
