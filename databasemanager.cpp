@@ -42,6 +42,10 @@ bool DatabaseManager::openConnection(QString *errorMessage)
         qEnvironmentVariable("STUDYNOTES_DB_PASSWORD")
     );
 
+    db.setConnectOptions(
+        qEnvironmentVariable("STUDYNOTES_DB_OPTIONS", "sslmode=prefer")
+    );
+
     if (!db.open()) {
         if (errorMessage) {
             *errorMessage = db.lastError().text();
