@@ -79,6 +79,33 @@ int main(int argc, char *argv[])
                          adminPanelPage.show();
                      });
 
+    QObject::connect(&adminPanelPage, &AdminPanelPage::deleteNoteRequested,
+                     &adminPanelPage, [&](int noteId) {
+        if (QMessageBox::question(&adminPanelPage,
+                "Delete Public Note", "Permanently delete the selected public note?",
+                QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel)
+                != QMessageBox::Yes) {
+            return;
+        }
+
+        const QSqlDatabase database = DatabaseManager::database();
+        const int currentUserId = SessionManager::instance().userId();
+        const NoteSaveResult deletion = AdminService::deletePublicNote(
+            database, currentUserId, noteId);
+        if (!deletion.success) {
+            adminPanelPage.showError(deletion.message);
+            return;
+        }
+
+        const AdminNotesResult notes = AdminService::loadPublicNotes(database, currentUserId);
+        if (notes.success) {
+            adminPanelPage.setNotes(notes.notes);
+        } else {
+            adminPanelPage.clearNotes();
+            adminPanelPage.showError("The note was deleted. " + notes.message);
+        }
+    });
+
     QObject::connect(&adminPanelPage, &AdminPanelPage::backRequested,
                      &mainWindow, [&]() {
                          adminPanelPage.hide();

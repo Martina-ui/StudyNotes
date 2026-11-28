@@ -69,8 +69,7 @@ void AdminPanelPage::updateSelection()
 {
     int row = ui->notesListWidget->currentRow();
     bool hasSelection = row >= 0 && row < currentNotes.size();
-    //deletion will be enabled when Issue #15 is implemented.
-    ui->deleteButton->setEnabled(false);
+    ui->deleteButton->setEnabled(hasSelection);
 
     if (!hasSelection) {
         ui->noteTitleValue->setText("Select a public note to review");

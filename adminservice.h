@@ -2,7 +2,7 @@
 #define ADMINSERVICE_H
 
 #include <QList>
-#include "mynotespage.h"
+#include "noteservice.h"
 #include <QSqlDatabase>
 #include <QString>
 
@@ -17,6 +17,9 @@ class AdminService
 public:
     static bool isAuthorizedAdmin(const QSqlDatabase &database, int currentUserId);
     static AdminNotesResult loadPublicNotes(const QSqlDatabase &database, int currentUserId);
+    static NoteSaveResult deletePublicNote(const QSqlDatabase &database,
+                                           int currentUserId,
+                                           int noteId);
 };
 
 #endif
